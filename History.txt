@@ -1,0 +1,19 @@
+== svn
+* 11 major enhancements:
+  * Able to roll back original method after processing.
+  * Can mutate numeric literals.
+  * Can mutate strings.
+  * Can mutate a node at a time.
+  * Can mutate if/unless
+  * Decoupled from Test::Unit
+  * Cleaner output
+  * Can mutate true and false.
+  * Can mutate while and until.
+  * Can mutate regexes, ranges, symbols
+  * Can run against entire classes
+  
+== 1.0.0 / 2006-10-22
+
+* 1 major enhancement
+  * Birthday!
+

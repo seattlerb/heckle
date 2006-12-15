@@ -1,0 +1,21 @@
+#!/usr/local/bin/ruby
+
+$:.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
+require 'test_unit_heckler'
+
+file = ARGV.shift
+impl = ARGV.shift
+meth = ARGV.shift
+
+unless file and impl then
+  abort "usage: #{File.basename($0)} file.rb impl_class_name [impl_method_name]"
+end
+
+load file
+
+if meth
+  heckle = TestUnitHeckler.new(impl, meth)
+  heckle.validate
+else
+  TestUnitHeckler.validate(impl)
+end

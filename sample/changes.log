@@ -1,0 +1,91 @@
+# Logfile created on Fri Nov 10 22:52:10 PST 2006 by logger.rb/1.5.2.7
+I, [2006-11-10T22:52:10.310486 #498]  INFO -- : Validating 
+I, [2006-11-10T22:52:10.326577 #498]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T22:52:10.328115 #498]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "I\rmeo&+eIZ{bD2dj1Z_e\001{Y!](CbI'!`@\020Wlg4,w\t\02181/4J\t\v@][ L!Xy[\r\\MJ[0.+gh}\001ks\026_-BK")
+  (@names << "Hello, Jeff")
+  (@names << "Hi, Frank")
+end
+I, [2006-11-10T22:52:10.344547 #498]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T22:52:10.346021 #498]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "Hello, Robert")
+  (@names << "\030ym+3\f:\031\023`\r:O\a")
+  (@names << "Hi, Frank")
+end
+I, [2006-11-10T22:52:10.356743 #498]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T22:52:10.358234 #498]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "Hello, Robert")
+  (@names << "Hello, Jeff")
+  (@names << "o,NY\020\027V0v\032dEw\010<*4\026uh$\026\010vhl(A\"ybX$sd\"M\006qbH\032TAV/")
+end
+I, [2006-11-10T22:52:10.369174 #498]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T22:52:10.370636 #498]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "Hello, Robert")
+  (@names << "Hello, Jeff")
+  (@names << "Hi, Frank")
+end
+I, [2006-11-10T23:17:54.953429 #569]  INFO -- : Validating 
+I, [2006-11-10T23:19:05.369315 #570]  INFO -- : Validating 
+I, [2006-11-10T23:20:01.512545 #571]  INFO -- : Validating 
+I, [2006-11-10T23:20:08.080030 #572]  INFO -- : Validating 
+I, [2006-11-10T23:20:08.100363 #572]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T23:20:08.101943 #572]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "\034\000\021[\r\aM!L=qfU'#")
+  (@names << "Hello, Jeff")
+  (@names << "Hi, Frank")
+end
+I, [2006-11-10T23:20:08.120455 #572]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T23:20:08.122176 #572]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "Hello, Robert")
+  (@names << "\r\025 $\n<z\037Z5<VSsja\026/\t>(&6P^X<\000\t..[<QGM\036\ei$\010RL\030J.vEsJ,")
+  (@names << "Hi, Frank")
+end
+I, [2006-11-10T23:20:08.141360 #572]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T23:20:08.143164 #572]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "Hello, Robert")
+  (@names << "Hello, Jeff")
+  (@names << ":\032lTh\031\037sw8\004!d\021\017n8\"\f8ucDs:.H\026n\010Bb|Is?p\027XR<4+%qfQ|^(\022\aN\024<e)\023P_a.j\000(\037bRe\"&xIO\001\f5\021o?\005\a\034)V@WmAb|\001(Z\020\032")
+end
+I, [2006-11-10T23:20:08.162167 #572]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T23:20:08.163769 #572]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "Hello, Robert")
+  (@names << "Hello, Jeff")
+  (@names << "Hi, Frank")
+end
+I, [2006-11-10T23:20:30.047573 #574]  INFO -- : Validating 
+I, [2006-11-10T23:20:30.064031 #574]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T23:20:30.065826 #574]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "B]ms\026*\025\034\035%\026d_!\023\017c8\f\v\003G\fSAdh\025kC8&!,1sc\032htACl6\023rgq[j\016J>\003$I\025\037\001\027E$/P\025<Uu+#MCN%.mGFw\005qje 1D\037{wQL")
+  (@names << "Hello, Jeff")
+  (@names << "Hi, Frank")
+end
+I, [2006-11-10T23:20:30.076369 #574]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T23:20:30.078079 #574]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "Hello, Robert")
+  (@names << "A\002\tu<:r\021L\n`yArP\010\032]n\n\036+@?sh\e\020\023{\027I<t+QbD\000\006:3{w\f\\XCH\032\026xSogO\036)*B_E\034;\016\\Mj")
+  (@names << "Hi, Frank")
+end
+I, [2006-11-10T23:20:30.089013 #574]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T23:20:30.090484 #574]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "Hello, Robert")
+  (@names << "Hello, Jeff")
+  (@names << "Z\023C#\025qg{Cb++W\r\\dtEbq4P2c")
+end
+I, [2006-11-10T23:20:30.101238 #574]  INFO -- : Heckling Heckled#uses_strings
+I, [2006-11-10T23:20:30.102788 #574]  INFO -- : Replacing #uses_strings with:
+def uses_strings
+  (@names << "Hello, Robert")
+  (@names << "Hello, Jeff")
+  (@names << "Hi, Frank")
+end
