@@ -10,7 +10,7 @@ class String
 end
 
 class Heckle < SexpProcessor
-  VERSION = '1.0.0'
+  VERSION = '1.1.0'
     
   MUTATABLE_NODES = [:if, :lit, :str, :true, :false, :while, :until]
 
@@ -18,26 +18,40 @@ class Heckle < SexpProcessor
                 :mutation_count, :node_count, :failures
   
   @@debug = false;
+  @@test_pattern = 'test/test_*.rb'
+  @@tests_loaded = false;
   
   def self.debug=(value)
     @@debug = value
   end
   
+  def self.test_pattern=(value)
+    @@test_pattern = value
+  end
+  
   def self.validate(klass_name)
-    klass_name.to_class.instance_methods(false).each do |meth|
+    load_test_files
+    klass = klass_name.to_class
+    klass.instance_methods(false).each do |meth|
       heckler = self.new(klass_name, meth)
       heckler.validate
     end
   end
+  
+  def self.load_test_files
+    @@tests_loaded = true
+    Dir.glob(@@test_pattern).each {|test| require test}
+  end
+  
   
   def initialize(klass_name=nil, method_name=nil)
     super()
 
     @klass_name, @method_name = klass_name, method_name.intern
     @klass = @method = nil
-    
-    load_test_files
-            
+  
+    self.class.load_test_files unless @@tests_loaded
+  
     self.strict = false
     self.auto_shift_type = true
     self.expected = Array
@@ -72,29 +86,42 @@ class Heckle < SexpProcessor
     end
   end
   
-  def load_test_files
-    Dir.glob(ENV['TESTS'] || 'test/test_*.rb').each {|test| require test}
-  end
-
   ############################################################
   ### Running the script
   
-  def validate
-    puts "Validating #{file}"
-    if tests_pass? then
-      puts "Tests passed -- heckling"
+  def validate    
+    if silence_stream(STDOUT) { tests_pass? } then
+      if mutations_left == 0
+        puts
+        puts "!"*70
+        puts "!!! #{method_name} has a thick skin. There's nothing to heckle."
+        puts "!"*70
+        puts
+        return
+      end
+
+      puts
+      puts "*"*70
+      puts "***  #{klass_name}\##{method_name} loaded with #{mutations_left} possible mutations"
+      puts "*"*70
+      puts
       
-      until @mutatees.collect {|k,v| v}.uniq.flatten.empty?
-        reset_tree if current_tree != original_tree
+      puts "Initial tests pass. Let's rumble."
+                  
+      until mutations_left == 0
+        puts "#{mutations_left} mutations remaining..."
+        reset_tree
         process current_tree
         silence_stream(STDOUT) { run_tests }
       end
       
+      reset # in case we're validating again. we should clean up.
+      
       unless @failures.empty?
-        puts "The following mutations didn't cause test failures:\n"
+        puts "\nThe following mutations didn't cause test failures:\n"
         @failures.each {|failure| puts "\n#{failure}\n"}
       else
-        puts "No mutants survived. Cool!"
+        puts "No mutants survived. Cool!\n\n"
       end
     else
       puts "Tests failed... fix and run heckle again"
@@ -106,7 +133,6 @@ class Heckle < SexpProcessor
   end
   
   def heckle(exp)
-    puts "\nHeckling #{klass_name}##{method_name}\n" if @@debug
     src = RubyToRuby.new.process(exp)
     puts "Replacing #{klass_name}##{method_name} with:\n\n#{src}\n" if @@debug
     klass_name.to_class.class_eval(src)
@@ -133,14 +159,14 @@ class Heckle < SexpProcessor
   def mutate_lit(exp)
     case exp[1]
     when Fixnum, Float, Bignum
-      [:lit, exp[1] + rand(10)]
+      [:lit, exp[1] + rand_number]
     when Symbol
-      [:lit, :"#{rand_string}"]
+      [:lit, rand_symbol]
     when Regexp
       [:lit, /#{Regexp.escape(rand_string)}/]
     when Range
       [:lit, rand_range]
-    end
+    end  
   end
   
   def process_str(exp)
@@ -288,8 +314,16 @@ class Heckle < SexpProcessor
     @mutated
   end
   
+  def mutations_left
+    @mutatees.inject(0) {|sum, mut| sum = sum + mut.last.size }
+  end
+  
   def current_code
     RubyToRuby.translate(klass_name.to_class, method_name)
+  end
+  
+  def rand_number
+    (rand(10) + 1)*((-1)**rand(2))
   end
   
   def rand_string
@@ -297,6 +331,13 @@ class Heckle < SexpProcessor
     str = ""
     size.times { str << rand(126).chr }
     str
+  end
+  
+  def rand_symbol
+    letters = ('a'..'z').to_a + ('A'..'Z').to_a
+    str = ""
+    rand(100).times { str << letters[rand(letters.size)] }
+    :"#{str}"
   end
   
   def rand_range
@@ -323,12 +364,14 @@ class Heckle < SexpProcessor
   #
   #   puts 'But this will'
   def silence_stream(stream)
-    old_stream = stream.dup
-    stream.reopen(RUBY_PLATFORM =~ /mswin/ ? 'NUL:' : '/dev/null')
-    stream.sync = true
+    unless @@debug
+      old_stream = stream.dup
+      stream.reopen(RUBY_PLATFORM =~ /mswin/ ? 'NUL:' : '/dev/null')
+      stream.sync = true
+    end
     yield
   ensure
-    stream.reopen(old_stream)
+    stream.reopen(old_stream) unless @@debug
   end
 
 end

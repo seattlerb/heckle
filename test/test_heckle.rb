@@ -62,6 +62,10 @@ class TestHeckle < Test::Unit::TestCase
      
     assert_equal expected, @heckler.mutatees
   end
+  
+  def test_should_count_mutatees_left
+    assert_equal 10, @heckler.mutations_left
+  end
 
   def test_reset
     original_tree = @heckler.current_tree.deep_clone
@@ -127,6 +131,10 @@ class Heckle
   def rand(*args)
     5
   end
+  
+  def rand_number(*args)
+    5
+  end
 end
 
 class TestHeckleNumbers < Test::Unit::TestCase
@@ -135,6 +143,7 @@ class TestHeckleNumbers < Test::Unit::TestCase
   end
       
   def test_literals_should_flip_one_at_a_time
+    assert_equal 3, @heckler.mutations_left
     expected = [:defn,
      :uses_numeric_literals,
      [:scope,
@@ -178,6 +187,12 @@ class TestHeckleNumbers < Test::Unit::TestCase
   
   def teardown
     @heckler.reset
+  end
+end
+
+class Heckle
+  def rand_symbol
+    :"l33t h4x0r"
   end
 end
 

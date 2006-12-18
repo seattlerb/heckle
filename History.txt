@@ -1,5 +1,5 @@
 == svn
-* 11 major enhancements:
+* 12 major enhancements:
   * Able to roll back original method after processing.
   * Can mutate numeric literals.
   * Can mutate strings.
@@ -11,6 +11,7 @@
   * Can mutate while and until.
   * Can mutate regexes, ranges, symbols
   * Can run against entire classes
+  * Command line options!
   
 == 1.0.0 / 2006-10-22
 

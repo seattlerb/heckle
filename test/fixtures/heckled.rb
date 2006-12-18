@@ -93,6 +93,9 @@ class Heckled
     i = 1..4
   end
   
+  def uses_nothing
+  end
+  
   private
   
   def some_func; end

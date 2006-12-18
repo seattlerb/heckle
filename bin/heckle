@@ -2,16 +2,33 @@
 
 $:.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
 require 'test_unit_heckler'
+require 'optparse'
 
-file = ARGV.shift
+opts = OptionParser.new do |opts|
+  opts.banner = "Usage: #{File.basename($0)} class_name [method_name]"
+  opts.on( "-v", "--verbose", "Loudly explain heckle run" ) do |opt|
+    Heckle.debug = true
+  end
+  
+  opts.on( "-t", "--tests TEST_PATTERN", 
+           "Location of tests (glob)" ) do |pattern|
+    Heckle.test_pattern = pattern
+  end
+  
+  opts.on( "-h", "--help", "Show this message") do |opt|
+    puts opts
+  end
+end
+
+opts.parse!
+
 impl = ARGV.shift
 meth = ARGV.shift
 
-unless file and impl then
-  abort "usage: #{File.basename($0)} file.rb impl_class_name [impl_method_name]"
+unless impl then
+  puts opts
+  exit 1
 end
-
-load file
 
 if meth
   heckle = TestUnitHeckler.new(impl, meth)
