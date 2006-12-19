@@ -7,23 +7,21 @@ class TestUnitHeckler < Heckle::Base
   @@test_pattern = 'test/test_*.rb'
   @@tests_loaded = false;
 
-  class << self
-    def test_pattern=(value)
-      @@test_pattern = value
-    end
+  def self.test_pattern=(value)
+    @@test_pattern = value
+  end
   
-    def load_test_files
-      @@tests_loaded = true
-      Dir.glob(@@test_pattern).each {|test| require test}
-    end
+  def self.load_test_files
+    @@tests_loaded = true
+    Dir.glob(@@test_pattern).each {|test| require test}
+  end
 
-    def validate(klass_name)
-      load_test_files
-      klass = klass_name.to_class
-      klass.instance_methods(false).each do |method_name|
-        heckler = self.new(klass_name, method_name)
-        heckler.test_and_validate
-      end
+  def self.validate(klass_name)
+    load_test_files
+    klass = klass_name.to_class
+    klass.instance_methods(false).each do |method_name|
+      heckler = self.new(klass_name, method_name)
+      heckler.test_and_validate
     end
   end
 

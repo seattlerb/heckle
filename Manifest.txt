@@ -4,6 +4,8 @@ README.txt
 Rakefile
 bin/heckle
 lib/heckle.rb
+lib/heckle/base.rb
+lib/heckle/reporter.rb
 lib/test_unit_heckler.rb
 sample/Rakefile
 sample/changes.log

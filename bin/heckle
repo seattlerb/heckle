@@ -31,8 +31,7 @@ unless impl then
 end
 
 if meth
-  heckle = TestUnitHeckler.new(impl, meth)
-  heckle.validate
+  TestUnitHeckler.new(impl, meth).validate
 else
   TestUnitHeckler.validate(impl)
 end

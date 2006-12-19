@@ -14,7 +14,7 @@ class TestHeckle < Test::Unit::TestCase
   def test_should_set_original_tree
     expected = [:defn,
      :uses_many_things,
-     [:scope,
+     [:fbody, [:scope,
       [:block,
        [:args],
        [:lasgn, :i, [:lit, 1]],
@@ -29,7 +29,7 @@ class TestHeckle < Test::Unit::TestCase
           nil],
          [:return, [:false]]],
         true],
-       [:lvar, :i]]]]
+       [:lvar, :i]]]]]
     
     assert_equal expected, @heckler.original_tree
   end
@@ -77,7 +77,7 @@ class TestHeckle < Test::Unit::TestCase
     assert_not_equal original_mutatees, @heckler.mutatees
     
     @heckler.reset
-    assert_equal original_tree, @heckler.current_tree
+    assert_equal original_tree[2], @heckler.current_tree[2][1]
     assert_equal original_mutatees, @heckler.mutatees
   end
   
@@ -386,12 +386,12 @@ class TestHeckleSameLiteral < Test::Unit::TestCase
   def test_original_tree
     expected = [:defn,
      :uses_the_same_literal,
-     [:scope,
+     [:fbody, [:scope,
       [:block,
        [:args],
        [:lasgn, :i, [:lit, 1]],
        [:lasgn, :i, [:lit, 1]],
-       [:lasgn, :i, [:lit, 1]]]]]
+       [:lasgn, :i, [:lit, 1]]]]]]
     
     assert_equal expected, @heckler.current_tree
   end

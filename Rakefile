@@ -1,5 +1,7 @@
 # -*- ruby -*-
 
+$: << 'lib'
+
 require 'rubygems'
 require 'hoe'
 require './lib/heckle.rb'
