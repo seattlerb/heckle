@@ -30,8 +30,5 @@ unless impl then
   exit 1
 end
 
-if meth
-  TestUnitHeckler.new(impl, meth).validate
-else
-  TestUnitHeckler.validate(impl)
-end
+TestUnitHeckler.validate(impl, meth)
+

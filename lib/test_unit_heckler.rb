@@ -16,12 +16,17 @@ class TestUnitHeckler < Heckle::Base
     Dir.glob(@@test_pattern).each {|test| require test}
   end
 
-  def self.validate(klass_name)
+  def self.validate(klass_name, method_name = nil)
     load_test_files
     klass = klass_name.to_class
-    klass.instance_methods(false).each do |method_name|
-      heckler = self.new(klass_name, method_name)
-      heckler.test_and_validate
+    
+    if method_name
+      self.new(klass_name, method_name).test_and_validate
+    else
+      klass.instance_methods(false).each do |method_name|
+        heckler = self.new(klass_name, method_name)
+        heckler.test_and_validate
+      end
     end
   end
 
