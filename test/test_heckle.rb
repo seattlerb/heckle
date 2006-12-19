@@ -8,7 +8,7 @@ require 'heckled'
 
 class TestHeckle < Test::Unit::TestCase
   def setup
-    @heckler = Heckle.new("Heckled", "uses_many_things")
+    @heckler = Heckle::Base.new("Heckled", "uses_many_things")
   end
   
   def test_should_set_original_tree
@@ -127,19 +127,21 @@ class TestHeckle < Test::Unit::TestCase
   end
 end
 
-class Heckle
-  def rand(*args)
-    5
-  end
+module Heckle
+  class Base
+    def rand(*args)
+      5
+    end
   
-  def rand_number(*args)
-    5
+    def rand_number(*args)
+      5
+    end
   end
 end
 
 class TestHeckleNumbers < Test::Unit::TestCase
   def setup
-    @heckler = Heckle.new("Heckled", "uses_numeric_literals")
+    @heckler = Heckle::Base.new("Heckled", "uses_numeric_literals")
   end
       
   def test_literals_should_flip_one_at_a_time
@@ -190,15 +192,17 @@ class TestHeckleNumbers < Test::Unit::TestCase
   end
 end
 
-class Heckle
-  def rand_symbol
-    :"l33t h4x0r"
+module Heckle
+  class Base
+    def rand_symbol
+      :"l33t h4x0r"
+    end
   end
 end
 
 class TestHeckleSymbols < Test::Unit::TestCase
   def setup
-    @heckler = Heckle.new("Heckled", "uses_symbols")
+    @heckler = Heckle::Base.new("Heckled", "uses_symbols")
   end
   
   def test_default_structure
@@ -256,7 +260,7 @@ end
 
 class TestHeckleRegexes < Test::Unit::TestCase
   def setup
-    @heckler = Heckle.new("Heckled", "uses_regexes")
+    @heckler = Heckle::Base.new("Heckled", "uses_regexes")
   end
   
   def test_default_structure
@@ -314,7 +318,7 @@ end
 
 class TestHeckleRanges < Test::Unit::TestCase
   def setup
-    @heckler = Heckle.new("Heckled", "uses_ranges")
+    @heckler = Heckle::Base.new("Heckled", "uses_ranges")
   end
   
   def test_default_structure
@@ -372,7 +376,7 @@ end
 
 class TestHeckleSameLiteral < Test::Unit::TestCase
   def setup
-    @heckler = Heckle.new("Heckled", "uses_the_same_literal")
+    @heckler = Heckle::Base.new("Heckled", "uses_the_same_literal")
   end
 
   def teardown
@@ -436,15 +440,17 @@ class TestHeckleSameLiteral < Test::Unit::TestCase
   end
 end
 
-class Heckle
-  def rand_string
-    "l33t h4x0r"
+module Heckle
+  class Base
+    def rand_string
+      "l33t h4x0r"
+    end
   end
 end
 
 class TestHeckleStrings < Test::Unit::TestCase
   def setup
-    @heckler = Heckle.new("Heckled", "uses_strings")
+    @heckler = Heckle::Base.new("Heckled", "uses_strings")
   end
   
   def teardown
@@ -507,7 +513,7 @@ end
 
 class TestHeckleIfs < Test::Unit::TestCase
   def setup
-    @heckler = Heckle.new("Heckled", "uses_if")
+    @heckler = Heckle::Base.new("Heckled", "uses_if")
   end
   
   def teardown
@@ -562,7 +568,7 @@ end
 
 class TestHeckleBooleans < Test::Unit::TestCase
   def setup
-    @heckler = Heckle.new("Heckled", "uses_boolean")
+    @heckler = Heckle::Base.new("Heckled", "uses_boolean")
   end
   
   def teardown
@@ -591,7 +597,7 @@ end
 
 class TestHeckleWhile < Test::Unit::TestCase
   def setup
-    @heckler = Heckle.new("Heckled", "uses_while")
+    @heckler = Heckle::Base.new("Heckled", "uses_while")
   end
   
   def teardown
@@ -622,7 +628,7 @@ end
 
 class TestHeckleUntil < Test::Unit::TestCase
   def setup
-    @heckler = Heckle.new("Heckled", "uses_until")
+    @heckler = Heckle::Base.new("Heckled", "uses_until")
   end
   
   def teardown

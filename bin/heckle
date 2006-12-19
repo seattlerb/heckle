@@ -7,12 +7,12 @@ require 'optparse'
 opts = OptionParser.new do |opts|
   opts.banner = "Usage: #{File.basename($0)} class_name [method_name]"
   opts.on( "-v", "--verbose", "Loudly explain heckle run" ) do |opt|
-    Heckle.debug = true
+    TestUnitHeckler.debug = true
   end
   
   opts.on( "-t", "--tests TEST_PATTERN", 
            "Location of tests (glob)" ) do |pattern|
-    Heckle.test_pattern = pattern
+    TestUnitHeckler.test_pattern = pattern
   end
   
   opts.on( "-h", "--help", "Show this message") do |opt|
