@@ -1,4 +1,5 @@
-== svn
+== 1.1.0 / 2006-12-19
+
 * 12 major enhancements:
   * Able to roll back original method after processing.
   * Can mutate numeric literals.

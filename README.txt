@@ -1,14 +1,14 @@
 heckle
-    by Ryan Davis and Kevin Clark
     http://www.rubyforge.org/projects/seattlerb
+    by Ryan Davis and Kevin Clark
 
 == DESCRIPTION:
-  
+
 Unit Testing Sadism. More description coming soon. I'm punting to get
 this launched ASAP.
 
 == FEATURES/PROBLEMS:
-  
+
 * needs some love. haha.
 
 == SYNOPSYS:
