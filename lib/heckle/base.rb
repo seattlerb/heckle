@@ -306,7 +306,7 @@ module Heckle
     end
 
     def rand_string
-      size = rand(100)
+      size = rand(50)
       str = ""
       size.times { str << rand(126).chr }
       str
@@ -315,7 +315,7 @@ module Heckle
     def rand_symbol
       letters = ('a'..'z').to_a + ('A'..'Z').to_a
       str = ""
-      rand(100).times { str << letters[rand(letters.size)] }
+      (rand(50) + 1).times { str << letters[rand(letters.size)] }
       :"#{str}"
     end
 

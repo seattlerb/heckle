@@ -1,3 +1,9 @@
+== 1.1.1 / 2006-12-19
+
+* 2 bug fixes:
+  * Load tests properly when supplying method name.
+  * Make sure random symbols have atleast one character.
+
 == 1.1.0 / 2006-12-19
 
 * 12 major enhancements:

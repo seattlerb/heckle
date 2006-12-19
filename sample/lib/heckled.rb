@@ -60,4 +60,8 @@ class Heckled
       end
     end
   end
+  
+  def uses_masignment
+    one, two = [1, 2]
+  end
 end
