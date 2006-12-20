@@ -63,8 +63,8 @@ class Heckled
   end
   
   def uses_boolean
-    true
-    false
+    a = true
+    b = false
   end
   
   def uses_unless

@@ -1,6 +1,3 @@
 require 'rubygems'
-require 'parse_tree'
-require 'ruby2ruby'
-require 'logger'
 require 'heckle/reporter'
 require 'heckle/base'

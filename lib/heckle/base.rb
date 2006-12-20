@@ -1,3 +1,6 @@
+require 'parse_tree'
+require 'ruby2ruby'
+
 class String
   def to_class
     split(/::/).inject(Object) { |klass, name| klass.const_get(name) }
