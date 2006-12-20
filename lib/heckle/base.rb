@@ -5,7 +5,7 @@ class String
 end
 
 module Heckle
-  VERSION = '1.1.0'
+  VERSION = '1.1.1'
 
   class Base < SexpProcessor
     MUTATABLE_NODES = [:if, :lit, :str, :true, :false, :while, :until]

@@ -2,6 +2,7 @@
 
 require 'test/unit/autorunner'
 require 'heckle'
+$: << 'lib' << 'test'
 
 class TestUnitHeckler < Heckle::Base
   @@test_pattern = 'test/test_*.rb'
