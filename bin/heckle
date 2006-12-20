@@ -17,6 +17,7 @@ opts = OptionParser.new do |opts|
   
   opts.on( "-h", "--help", "Show this message") do |opt|
     puts opts
+    exit 0
   end
 end
 
