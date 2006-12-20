@@ -4,20 +4,23 @@ heckle
 
 == DESCRIPTION:
 
-Unit Testing Sadism. More description coming soon. I'm punting to get
-this launched ASAP.
+Heckle is a mutation tester. It modifies your code and runs your tests to make sure they fail. The idea is that if code can be changed and your tests don’t notice, either that code isn’t being covered or it doesn’t do anything.
+
 
 == FEATURES/PROBLEMS:
 
-* needs some love. haha.
+* Mutates booleans, numbers, strings, symbols, ranges, regexes and branches (if, while, unless, until)
+* Able to mutate entire classes, or individual methods
+* Can not yet mutate class methods
 
 == SYNOPSYS:
 
-    FIX
+It’s like hiring a white-hat hacker to try to break into your server and making sure you detect it. You learn the most by trying to break things and watching the outcome in an act of unit test sadism.
 
 == REQUIREMENTS:
 
-+ FIX
++ ruby2ruby 1.1.2 or greater
++ ParseTree 1.6.1 or greater
 
 == INSTALL:
 
