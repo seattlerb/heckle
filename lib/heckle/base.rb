@@ -280,7 +280,7 @@ module Heckle
       return false unless method == method_name
       mutation_count[exp] = 0 if mutation_count[exp].nil?
       return false if node_count[exp] <= mutation_count[exp]
-      mutatees[exp.first.to_sym].include?(exp) && !already_mutated?
+      ( mutatees[exp.first.to_sym] || [] ).include?(exp) && !already_mutated?
     end
 
     def grab_conditional_loop_parts(exp)
