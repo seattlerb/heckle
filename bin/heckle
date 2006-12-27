@@ -9,22 +9,21 @@ opts = OptionParser.new do |opts|
   opts.on( "-v", "--verbose", "Loudly explain heckle run" ) do |opt|
     TestUnitHeckler.debug = true
   end
-  
-  opts.on( "-t", "--tests TEST_PATTERN", 
+
+  opts.on( "-t", "--tests TEST_PATTERN",
            "Location of tests (glob)" ) do |pattern|
     TestUnitHeckler.test_pattern = pattern
   end
-  
+
   opts.on( "-b", "--branches-only", "Only mutate branches" ) do |opt|
     puts "!"*70
     puts "!!! Heckling branches only"
     puts "!"*70
     puts
-    
-    Heckle::Base.send(:remove_const, :MUTATABLE_NODES)
-    Heckle::Base.const_set 'MUTATABLE_NODES', [:if, :while, :until]
+
+    Heckle::Base::MUTATABLE_NODES.replace [:if, :while, :until]
   end
-  
+
   opts.on( "-h", "--help", "Show this message") do |opt|
     puts opts
     exit 0
@@ -42,4 +41,3 @@ unless impl then
 end
 
 TestUnitHeckler.validate(impl, meth)
-
