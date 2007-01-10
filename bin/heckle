@@ -21,7 +21,7 @@ opts = OptionParser.new do |opts|
     puts "!"*70
     puts
 
-    Heckle::Base::MUTATABLE_NODES.replace [:if, :while, :until]
+    Heckle::MUTATABLE_NODES.replace [:if, :while, :until]
   end
 
   opts.on( "-h", "--help", "Show this message") do |opt|
