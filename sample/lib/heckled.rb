@@ -64,4 +64,13 @@ class Heckled
   def uses_masignment
     one, two = [1, 2]
   end
+  
+  def uses_infinite_loop?
+    # Converts to a infinite loop actually
+    some_func until true
+  end
+  
+  # placeholder
+  def some_func  
+  end
 end

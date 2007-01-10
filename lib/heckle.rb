@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'parse_tree'
 require 'ruby2ruby'
+require 'timeout'
 
 class String
   def to_class
@@ -18,10 +19,15 @@ class Heckle < SexpProcessor
                 :original_tree, :mutation_count, :node_count,
                 :failures, :count)
 
-  @@debug = false;
+  @@debug = false
+  @@timeout = 60 # default to something longer (can be overridden by runners)
 
   def self.debug=(value)
     @@debug = value
+  end
+  
+  def self.timeout=(value)
+    @@timeout = value
   end
 
   def initialize(klass_name=nil, method_name=nil, reporter = Reporter.new)
@@ -82,9 +88,11 @@ class Heckle < SexpProcessor
       reset_tree
       begin
         process current_tree
-        silence_stream { run_tests }
+        silence_stream { timeout(@@timeout) { run_tests } }
       rescue SyntaxError => e
-        puts "Mutation caused a syntax error: #{e.message}"
+        @reporter.warning "Mutation caused a syntax error: #{e.message}"
+      rescue Timeout::Error
+        @reporter.warning "Your tests timed out. Heckle may have caused an infinite loop."
       end
     end
 
@@ -361,23 +369,31 @@ class Heckle < SexpProcessor
 
   class Reporter
     def no_mutations(method_name)
-      puts
-      puts "!"*70
-      puts "!!! #{method_name} has a thick skin. There's nothing to heckle."
-      puts "!"*70
-      puts
+      warning "#{method_name} has a thick skin. There's nothing to heckle."
     end
 
     def method_loaded(klass_name, method_name, mutations_left)
-      puts
-      puts "*"*70
-      puts "***  #{klass_name}\##{method_name} loaded with #{mutations_left} possible mutations"
-      puts "*"*70
-      puts
+      info "#{klass_name}\##{method_name} loaded with #{mutations_left} possible mutations"
     end
 
     def remaining_mutations(mutations_left)
       puts "#{mutations_left} mutations remaining..."
+    end
+
+    def warning(message)
+      puts
+      puts "!" * 70
+      puts "!!! #{message}"
+      puts "!" * 70
+      puts
+    end
+    
+    def info(message)
+      puts
+      puts "*"*70
+      puts "***  #{message}"
+      puts "*"*70
+      puts
     end
 
     def no_failures

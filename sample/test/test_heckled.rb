@@ -16,4 +16,8 @@ class TestHeckled < Test::Unit::TestCase
     @heckled.uses_strings
     assert_equal ["Hello, Robert", "Hello, Jeff", "Hi, Frank"], @heckled.names
   end
+  
+  def test_uses_infinite_loop
+    @heckled.uses_infinite_loop?
+  end
 end
