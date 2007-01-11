@@ -25,14 +25,16 @@ class TestUnitHeckler < Heckle
     unless self.new(klass_name).tests_pass? then
       abort "Initial run of tests failed... fix and run heckle again"
     end
-    running_time = (Time.now - initial_time)
-    adjusted_timeout = (running_time * 2 < 5) ? 5 : (running_time * 2)
-    self.timeout = adjusted_timeout
+    
+    if self.guess_timeout?
+      running_time = (Time.now - initial_time)
+      adjusted_timeout = (running_time * 2 < 5) ? 5 : (running_time * 2)
+      self.timeout = adjusted_timeout
+      puts "Setting timeout at #{adjusted_timeout} seconds." if @@debug
+      
+    end
     
     puts "Initial tests pass. Let's rumble."
-
-    puts "Setting timeout at #{adjusted_timeout} seconds." if @@debug
-
 
     methods = method_name ? Array(method_name) : klass.instance_methods(false)
 

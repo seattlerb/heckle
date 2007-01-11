@@ -20,6 +20,7 @@ class Heckle < SexpProcessor
                 :failures, :count)
 
   @@debug = false
+  @@guess_timeout = true
   @@timeout = 60 # default to something longer (can be overridden by runners)
 
   def self.debug=(value)
@@ -28,6 +29,11 @@ class Heckle < SexpProcessor
   
   def self.timeout=(value)
     @@timeout = value
+    @@guess_timeout = false # We've set the timeout, don't guess
+  end
+  
+  def self.guess_timeout?
+    @@guess_timeout
   end
 
   def initialize(klass_name=nil, method_name=nil, reporter = Reporter.new)

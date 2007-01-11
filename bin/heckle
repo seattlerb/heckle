@@ -23,6 +23,12 @@ opts = OptionParser.new do |opts|
 
     Heckle::MUTATABLE_NODES.replace [:if, :while, :until]
   end
+  
+  opts.on( "-T", "--timeout SECONDS", "The maximum time for a test run in seconds",
+                                     "Used to catch infinite loops") do |timeout|
+    Heckle.timeout = timeout.to_i
+    puts "Setting timeout at #{timeout} seconds."
+  end
 
   opts.on( "-h", "--help", "Show this message") do |opt|
     puts opts
