@@ -9,6 +9,11 @@ opts = OptionParser.new do |opts|
   opts.on( "-v", "--verbose", "Loudly explain heckle run" ) do |opt|
     TestUnitHeckler.debug = true
   end
+  
+  opts.on( "-V", "--version", "Prints Heckle's version number") do |opt|
+    puts "Heckle #{Heckle::VERSION}"
+    exit 0
+  end
 
   opts.on( "-t", "--tests TEST_PATTERN",
            "Location of tests (glob)" ) do |pattern|
