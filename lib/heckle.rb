@@ -10,7 +10,7 @@ class String
 end
 
 class Heckle < SexpProcessor
-  VERSION = '1.1.1'
+  VERSION = '1.1.2'
   MUTATABLE_NODES = [:if, :lit, :str, :true, :false, :while, :until]
   WINDOZE = RUBY_PLATFORM =~ /mswin/
   NULL_PATH = WINDOZE ? 'NUL:' : '/dev/null'
@@ -38,28 +38,32 @@ class Heckle < SexpProcessor
 
   def initialize(klass_name=nil, method_name=nil, reporter = Reporter.new)
     super()
-
-    @klass_name, @method_name = klass_name, method_name.intern
-    @klass = @method = nil
+    
+    @klass_name = klass_name
+    @method_name = method_name.intern if method_name
+    
+    @klass = klass_name.to_class
+       
+    @method = nil
     @reporter = reporter
-
+    
     self.strict = false
     self.auto_shift_type = true
     self.expected = Array
-
+    
     @mutatees = Hash.new
     @mutation_count = Hash.new
     @node_count = Hash.new
     @count = 0
-
+    
     MUTATABLE_NODES.each {|type| @mutatees[type] = [] }
-
+    
     @failures = []
-
+    
     @mutated = false
-
+    
     grab_mutatees
-
+    
     @original_tree = current_tree.deep_clone
     @original_mutatees = mutatees.deep_clone
   end
@@ -127,13 +131,19 @@ class Heckle < SexpProcessor
             raise e
           end
     @reporter.replacing(klass_name, method_name, src) if @@debug
-    klass = klass_name.to_class
+    
+    clean_name = method_name.to_s.gsub(/self\./, '')
+    
     self.count += 1
-    new_name = "#{method_name}_#{count}"
 
-    klass.send :undef_method, new_name rescue nil
-    klass.send :alias_method, new_name, method_name
-    klass.class_eval(src)
+    new_name = "#{clean_name}_#{count}"
+    
+    aliasing_class = (method_name.to_s =~ /self\./) ? (class << @klass; self end) : @klass
+    
+    aliasing_class.send :undef_method, new_name rescue nil
+    aliasing_class.send :alias_method, new_name, clean_name
+        
+    @klass.class_eval(src)
   end
 
   ############################################################
@@ -259,13 +269,16 @@ class Heckle < SexpProcessor
     return unless original_tree != current_tree
     @mutated = false
 
-    klass = klass_name.to_class
-
     self.count += 1
-    new_name = "#{method_name}_#{count}"
-    klass.send :undef_method, new_name rescue nil
-    klass.send :alias_method, new_name, method_name
-    klass.send :alias_method, method_name, "#{method_name}_1"
+    
+    clean_name = method_name.to_s.gsub(/self\./, '')
+    new_name = "#{clean_name}_#{count}"
+    
+    aliasing_class = (method_name.to_s =~ /self\./) ? (class << @klass; self end) : @klass
+    
+    aliasing_class.send :undef_method, new_name rescue nil
+    aliasing_class.send :alias_method, new_name, clean_name
+    aliasing_class.send :alias_method, clean_name, "#{clean_name}_1"
   end
 
   def reset_mutatees

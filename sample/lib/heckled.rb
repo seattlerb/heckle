@@ -5,6 +5,10 @@ class Heckled
     @names = []
   end
   
+  def self.is_a_klass_method?
+    true
+  end
+  
   def uses_while
     i = 1
     while i < 10

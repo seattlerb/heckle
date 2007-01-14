@@ -385,3 +385,37 @@ class TestHeckleUntil < HeckleTestCase
     assert_equal expected, @heckler.current_tree
   end
 end
+
+class TestHeckleClassMethod < Test::Unit::TestCase
+  def setup
+    @heckler = TestHeckler.new("Heckled", "self.is_a_klass_method?")
+  end
+  
+  def teardown
+    @heckler.reset
+  end
+  
+  def test_default_structure
+    expected = [:defn, :"self.is_a_klass_method?",
+                [:scope,
+                 [:block,
+                  [:args],
+                  [:true]]]]
+    assert_equal expected, @heckler.current_tree
+  end
+  
+  def test_heckle_class_methods
+    expected = [:defn, :"self.is_a_klass_method?",
+                [:scope,
+                 [:block,
+                  [:args],
+                  [:false]]]]
+    @heckler.process(@heckler.current_tree)
+    assert_equal expected, @heckler.current_tree
+  end
+end
+ 
+ 
+ 
+ 
+ 

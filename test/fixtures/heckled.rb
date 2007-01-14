@@ -95,6 +95,10 @@ class Heckled
 
   def uses_nothing
   end
+  
+  def self.is_a_klass_method?
+    true
+  end
 
   private
 

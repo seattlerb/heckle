@@ -20,4 +20,8 @@ class TestHeckled < Test::Unit::TestCase
   def test_uses_infinite_loop
     @heckled.uses_infinite_loop?
   end
+  
+  def test_is_a_klass_method
+    assert_equal true, Heckled.is_a_klass_method?
+  end
 end
