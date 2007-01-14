@@ -100,7 +100,7 @@ class Heckle < SexpProcessor
         process current_tree
         silence_stream { timeout(@@timeout) { run_tests } }
       rescue SyntaxError => e
-        @reporter.warning "Mutation caused a syntax error: #{e.message}"
+        @reporter.warning "Mutation caused a syntax error:\n\n#{e.message}}"
       rescue Timeout::Error
         @reporter.warning "Your tests timed out. Heckle may have caused an infinite loop."
       end
@@ -133,13 +133,10 @@ class Heckle < SexpProcessor
     @reporter.replacing(klass_name, method_name, src) if @@debug
     
     clean_name = method_name.to_s.gsub(/self\./, '')
-    
     self.count += 1
-
     new_name = "#{clean_name}_#{count}"
     
     aliasing_class = (method_name.to_s =~ /self\./) ? (class << @klass; self end) : @klass
-    
     aliasing_class.send :undef_method, new_name rescue nil
     aliasing_class.send :alias_method, new_name, clean_name
         
@@ -154,10 +151,11 @@ class Heckle < SexpProcessor
     result = [:defn, method]
     result << process(exp.shift) until exp.empty?
     heckle(result) if method == method_name
-    @mutated = false
-    reset_node_count
 
     return result
+  ensure
+    @mutated = false
+    reset_node_count
   end
 
   def process_lit(exp)
@@ -230,10 +228,11 @@ class Heckle < SexpProcessor
   def mutate_node(node)
     raise UnsupportedNodeError unless respond_to? "mutate_#{node.first}"
     increment_node_count node
+    
     if should_heckle? node
       increment_mutation_count node
       return send("mutate_#{node.first}", node)
-    else
+    else      
       node
     end
   end
