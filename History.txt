@@ -1,4 +1,6 @@
 == svn
+* 1 bug fix
+  * Fixed the infinite loop caused by syntax errors
 * 1 minor enhancement
   * -b allows heckling of branches only
 * 2 major enhancement
