@@ -134,13 +134,14 @@ class Heckle < SexpProcessor
     
     clean_name = method_name.to_s.gsub(/self\./, '')
     self.count += 1
-    new_name = "#{clean_name}_#{count}"
+    new_name = "h#{count}_#{clean_name}"
     
-    aliasing_class = (method_name.to_s =~ /self\./) ? (class << @klass; self end) : @klass
-    aliasing_class.send :undef_method, new_name rescue nil
-    aliasing_class.send :alias_method, new_name, clean_name
-        
-    @klass.class_eval(src)
+    klass = aliasing_class method_name
+    klass.send :remove_method, new_name rescue nil
+    klass.send :alias_method, new_name, clean_name
+    klass.send :remove_method, clean_name rescue nil
+
+    @klass.class_eval src, "(#{new_name})"
   end
 
   ############################################################
@@ -271,13 +272,13 @@ class Heckle < SexpProcessor
     self.count += 1
     
     clean_name = method_name.to_s.gsub(/self\./, '')
-    new_name = "#{clean_name}_#{count}"
+    new_name = "h#{count}_#{clean_name}"
     
-    aliasing_class = (method_name.to_s =~ /self\./) ? (class << @klass; self end) : @klass
+    klass = aliasing_class method_name
     
-    aliasing_class.send :undef_method, new_name rescue nil
-    aliasing_class.send :alias_method, new_name, clean_name
-    aliasing_class.send :alias_method, clean_name, "#{clean_name}_1"
+    klass.send :undef_method, new_name rescue nil
+    klass.send :alias_method, new_name, clean_name
+    klass.send :alias_method, clean_name, "h1_#{clean_name}"
   end
 
   def reset_mutatees
@@ -309,6 +310,10 @@ class Heckle < SexpProcessor
 
   ############################################################
   ### Convenience methods
+
+  def aliasing_class(method_name)
+    method_name.to_s =~ /self\./ ? class << @klass; self; end : @klass
+  end
 
   def should_heckle?(exp)
     return false unless method == method_name
