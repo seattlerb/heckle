@@ -1,11 +1,14 @@
-== svn
-* 1 bug fix
-  * Fixed the infinite loop caused by syntax errors
-* 1 minor enhancement
-  * -b allows heckling of branches only
-* 2 major enhancement
+== 1.2.0 / 2007-01-15
+
+* 2 major enhancements:
   * Timeout for tests set dynamically and overridable with -T
   * Class method support with "self.method_name"
+* 3 minor enhancements:
+  * -b allows heckling of branches only
+  * Restructured class heirarchy and got rid of Base and others.
+  * Revamped the tests and reduced size by 60%.
+* 1 bug fix:
+  * Fixed the infinite loop caused by syntax errors
   
 == 1.1.1 / 2006-12-20
 

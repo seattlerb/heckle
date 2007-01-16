@@ -10,7 +10,7 @@ class String
 end
 
 class Heckle < SexpProcessor
-  VERSION = '1.1.2'
+  VERSION = '1.2.0'
   MUTATABLE_NODES = [:if, :lit, :str, :true, :false, :while, :until]
   WINDOZE = RUBY_PLATFORM =~ /mswin/
   NULL_PATH = WINDOZE ? 'NUL:' : '/dev/null'
@@ -26,44 +26,44 @@ class Heckle < SexpProcessor
   def self.debug=(value)
     @@debug = value
   end
-  
+
   def self.timeout=(value)
     @@timeout = value
     @@guess_timeout = false # We've set the timeout, don't guess
   end
-  
+
   def self.guess_timeout?
     @@guess_timeout
   end
 
   def initialize(klass_name=nil, method_name=nil, reporter = Reporter.new)
     super()
-    
+
     @klass_name = klass_name
     @method_name = method_name.intern if method_name
-    
+
     @klass = klass_name.to_class
-       
+
     @method = nil
     @reporter = reporter
-    
+
     self.strict = false
     self.auto_shift_type = true
     self.expected = Array
-    
+
     @mutatees = Hash.new
     @mutation_count = Hash.new
     @node_count = Hash.new
     @count = 0
-    
+
     MUTATABLE_NODES.each {|type| @mutatees[type] = [] }
-    
+
     @failures = []
-    
+
     @mutated = false
-    
+
     grab_mutatees
-    
+
     @original_tree = current_tree.deep_clone
     @original_mutatees = mutatees.deep_clone
   end
@@ -131,11 +131,11 @@ class Heckle < SexpProcessor
             raise e
           end
     @reporter.replacing(klass_name, method_name, src) if @@debug
-    
+
     clean_name = method_name.to_s.gsub(/self\./, '')
     self.count += 1
     new_name = "h#{count}_#{clean_name}"
-    
+
     klass = aliasing_class method_name
     klass.send :remove_method, new_name rescue nil
     klass.send :alias_method, new_name, clean_name
@@ -229,11 +229,11 @@ class Heckle < SexpProcessor
   def mutate_node(node)
     raise UnsupportedNodeError unless respond_to? "mutate_#{node.first}"
     increment_node_count node
-    
+
     if should_heckle? node
       increment_mutation_count node
       return send("mutate_#{node.first}", node)
-    else      
+    else
       node
     end
   end
@@ -270,12 +270,12 @@ class Heckle < SexpProcessor
     @mutated = false
 
     self.count += 1
-    
+
     clean_name = method_name.to_s.gsub(/self\./, '')
     new_name = "h#{count}_#{clean_name}"
-    
+
     klass = aliasing_class method_name
-    
+
     klass.send :undef_method, new_name rescue nil
     klass.send :alias_method, new_name, clean_name
     klass.send :alias_method, clean_name, "h1_#{clean_name}"
@@ -410,7 +410,7 @@ class Heckle < SexpProcessor
       puts "!" * 70
       puts
     end
-    
+
     def info(message)
       puts
       puts "*"*70
