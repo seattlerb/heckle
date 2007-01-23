@@ -35,7 +35,6 @@ class TestUnitHeckler < Heckle
 
     end
 
-    puts "Initial tests pass. Let's rumble."
     self.timeout = adjusted_timeout
 
     puts "Initial tests pass. Let's rumble."
@@ -43,9 +42,19 @@ class TestUnitHeckler < Heckle
     klass_methods = klass.singleton_methods(false).collect {|meth| "self.#{meth}"}
     methods = method_name ? Array(method_name) : klass.instance_methods(false) + klass_methods
 
-    methods.map do |method_name|
+    results = methods.map do |method_name|
       self.new(klass_name, method_name).validate
-    end.all?
+    end.compact # nil == thick skin
+
+    if results.all? then
+      puts "All heckling was thwarted! YAY!!!"
+    else
+      count = results.find_all { |o| o }.size
+      puts "#{count} methods were successfully heckled."
+      puts "Improve the tests and try again."
+    end
+
+    results.all?
   end
 
   def initialize(klass_name=nil, method_name=nil)

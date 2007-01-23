@@ -348,7 +348,7 @@ class Heckle < SexpProcessor
   end
 
   def rand_number
-    (rand(10) + 1)*((-1)**rand(2))
+    (rand(100) + 1)*((-1)**rand(2))
   end
 
   def rand_string
