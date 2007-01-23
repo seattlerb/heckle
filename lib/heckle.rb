@@ -2,6 +2,7 @@ require 'rubygems'
 require 'parse_tree'
 require 'ruby2ruby'
 require 'timeout'
+require 'tempfile'
 
 class String
   def to_class
@@ -110,8 +111,9 @@ class Heckle < SexpProcessor
 
     unless @failures.empty?
       @reporter.no_failures
+      original = RubyToRuby.new.process(@original)
       @failures.each do |failure|
-        @reporter.failure(failure)
+        @reporter.failure(original, failure)
       end
     else
       @reporter.no_surviving_mutants
@@ -123,11 +125,11 @@ class Heckle < SexpProcessor
   end
 
   def heckle(exp)
-    orig_exp = exp.deep_clone
+    @original = exp.deep_clone
     src = begin
             RubyToRuby.new.process(exp)
           rescue => e
-            puts "Error: #{e.message} with: #{klass_name}##{method_name}: #{orig_exp.inspect}"
+            puts "Error: #{e.message} with: #{klass_name}##{method_name}: #{@original.inspect}"
             raise e
           end
     @reporter.replacing(klass_name, method_name, src) if @@debug
@@ -170,7 +172,7 @@ class Heckle < SexpProcessor
     when Symbol
       [:lit, rand_symbol]
     when Regexp
-      [:lit, /#{Regexp.escape(rand_string)}/]
+      [:lit, Regexp.new(Regexp.escape(rand_string))]
     when Range
       [:lit, rand_range]
     end
@@ -423,8 +425,27 @@ class Heckle < SexpProcessor
       puts "\nThe following mutations didn't cause test failures:\n"
     end
 
-    def failure(failure)
-      puts "\n#{failure}\n"
+    def failure(original, failure)
+      windoze  = /win32/ =~ RUBY_PLATFORM
+      diff = (windoze ? 'diff.exe' : 'diff')
+
+      length = [original.split(/\n/).size, failure.split(/\n/).size].max
+
+      Tempfile.open("orig") do |a|
+        a.puts(original)
+        a.flush
+
+        Tempfile.open("fail") do |b|
+          b.puts(failure)
+          b.flush
+
+          diff_flags = " "
+
+          output = `#{diff} -U #{length} --label original #{a.path} --label mutation #{b.path}`
+          puts output.sub(/^@@.*?\n/, '')
+          puts
+        end
+      end
     end
 
     def no_surviving_mutants
