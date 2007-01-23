@@ -111,12 +111,14 @@ class Heckle < SexpProcessor
 
     unless @failures.empty?
       @reporter.no_failures
-      original = RubyToRuby.new.process(@original)
+      original = RubyToRuby.new.process(@original_tree)
       @failures.each do |failure|
         @reporter.failure(original, failure)
       end
+      false
     else
       @reporter.no_surviving_mutants
+      true
     end
   end
 
@@ -422,7 +424,9 @@ class Heckle < SexpProcessor
     end
 
     def no_failures
-      puts "\nThe following mutations didn't cause test failures:\n"
+      puts
+      puts "The following mutations didn't cause test failures:"
+      puts
     end
 
     def failure(original, failure)

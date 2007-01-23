@@ -9,7 +9,7 @@ opts = OptionParser.new do |opts|
   opts.on( "-v", "--verbose", "Loudly explain heckle run" ) do |opt|
     TestUnitHeckler.debug = true
   end
-  
+
   opts.on( "-V", "--version", "Prints Heckle's version number") do |opt|
     puts "Heckle #{Heckle::VERSION}"
     exit 0
@@ -28,7 +28,7 @@ opts = OptionParser.new do |opts|
 
     Heckle::MUTATABLE_NODES.replace [:if, :while, :until]
   end
-  
+
   opts.on( "-T", "--timeout SECONDS", "The maximum time for a test run in seconds",
                                      "Used to catch infinite loops") do |timeout|
     Heckle.timeout = timeout.to_i
@@ -51,4 +51,4 @@ unless impl then
   exit 1
 end
 
-TestUnitHeckler.validate(impl, meth)
+exit TestUnitHeckler.validate(impl, meth) ? 0 : 1

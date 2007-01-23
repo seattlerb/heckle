@@ -20,32 +20,32 @@ class TestUnitHeckler < Heckle
   def self.validate(klass_name, method_name = nil)
     load_test_files
     klass = klass_name.to_class
-    
+
     initial_time = Time.now
 
     unless self.new(klass_name).tests_pass? then
       abort "Initial run of tests failed... fix and run heckle again"
     end
-    
+
     if self.guess_timeout?
       running_time = (Time.now - initial_time)
       adjusted_timeout = (running_time * 2 < 5) ? 5 : (running_time * 2)
       self.timeout = adjusted_timeout
       puts "Setting timeout at #{adjusted_timeout} seconds." if @@debug
-      
+
     end
-    
+
     puts "Initial tests pass. Let's rumble."
     self.timeout = adjusted_timeout
-    
+
     puts "Initial tests pass. Let's rumble."
-    
+
     klass_methods = klass.singleton_methods(false).collect {|meth| "self.#{meth}"}
     methods = method_name ? Array(method_name) : klass.instance_methods(false) + klass_methods
-    
-    methods.each do |method_name|
+
+    methods.map do |method_name|
       self.new(klass_name, method_name).validate
-    end
+    end.all?
   end
 
   def initialize(klass_name=nil, method_name=nil)
