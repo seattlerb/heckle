@@ -1,8 +1,11 @@
 == 1.3.0 / 2007-02-07
+
 * 1 major enhancement:
   * Unified diffs for mutatated methods
 * 1 minor enhancement:
-  * Reports number of passing and failing mutations
+  * Now returns exit status 1 if failed.
+  * Added a simple report at the end.
+  * Runs are now sorted by method.
 * 1 bug fix:
   * Aborts when an unknown method is supplied.
   

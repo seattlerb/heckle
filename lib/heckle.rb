@@ -11,10 +11,11 @@ class String
 end
 
 class Heckle < SexpProcessor
-  VERSION = '1.2.0'
+  VERSION = '1.3.0'
   MUTATABLE_NODES = [:if, :lit, :str, :true, :false, :while, :until]
   WINDOZE = RUBY_PLATFORM =~ /mswin/
   NULL_PATH = WINDOZE ? 'NUL:' : '/dev/null'
+  DIFF = WINDOZE ? 'diff.exe' : 'diff'
 
   attr_accessor(:klass_name, :method_name, :klass, :method, :mutatees,
                 :original_tree, :mutation_count, :node_count,
@@ -111,8 +112,8 @@ class Heckle < SexpProcessor
 
     unless @failures.empty?
       @reporter.no_failures
-      original = RubyToRuby.new.process(@original_tree)
       @failures.each do |failure|
+        original = RubyToRuby.new.process(@original_tree.deep_clone)
         @reporter.failure(original, failure)
       end
       false
@@ -127,14 +128,16 @@ class Heckle < SexpProcessor
   end
 
   def heckle(exp)
-    @original = exp.deep_clone
+    exp_copy = exp.deep_clone
     src = begin
             RubyToRuby.new.process(exp)
           rescue => e
-            puts "Error: #{e.message} with: #{klass_name}##{method_name}: #{@original.inspect}"
+            puts "Error: #{e.message} with: #{klass_name}##{method_name}: #{exp_copy.inspect}"
             raise e
           end
-    @reporter.replacing(klass_name, method_name, src) if @@debug
+
+    original = RubyToRuby.new.process(@original_tree.deep_clone)
+    @reporter.replacing(klass_name, method_name, original, src) if @@debug
 
     clean_name = method_name.to_s.gsub(/self\./, '')
     self.count += 1
@@ -408,7 +411,6 @@ class Heckle < SexpProcessor
     end
 
     def warning(message)
-      puts
       puts "!" * 70
       puts "!!! #{message}"
       puts "!" * 70
@@ -416,7 +418,6 @@ class Heckle < SexpProcessor
     end
 
     def info(message)
-      puts
       puts "*"*70
       puts "***  #{message}"
       puts "*"*70
@@ -429,35 +430,37 @@ class Heckle < SexpProcessor
       puts
     end
 
-    def failure(original, failure)
-      windoze  = /win32/ =~ RUBY_PLATFORM
-      diff = (windoze ? 'diff.exe' : 'diff')
-
-      length = [original.split(/\n/).size, failure.split(/\n/).size].max
+    def diff(original, mutation)
+      length = [original.split(/\n/).size, mutation.split(/\n/).size].max
 
       Tempfile.open("orig") do |a|
         a.puts(original)
         a.flush
 
         Tempfile.open("fail") do |b|
-          b.puts(failure)
+          b.puts(mutation)
           b.flush
 
           diff_flags = " "
 
-          output = `#{diff} -U #{length} --label original #{a.path} --label mutation #{b.path}`
+          output = `#{Heckle::DIFF} -U #{length} --label original #{a.path} --label mutation #{b.path}`
           puts output.sub(/^@@.*?\n/, '')
           puts
         end
       end
     end
 
+    def failure(original, failure)
+      self.diff original, failure
+    end
+
     def no_surviving_mutants
       puts "No mutants survived. Cool!\n\n"
     end
 
-    def replacing(klass_name, method_name, src)
-      puts "Replacing #{klass_name}##{method_name} with:\n\n#{src}\n"
+    def replacing(klass_name, method_name, original, src)
+      puts "Replacing #{klass_name}##{method_name} with:\n\n"
+      diff(original, src)
     end
 
     def report_test_failures

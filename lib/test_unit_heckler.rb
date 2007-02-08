@@ -48,22 +48,31 @@ class TestUnitHeckler < Heckle
     self.timeout = adjusted_timeout
 
     puts "Initial tests pass. Let's rumble."
-    
+    puts
+
     methods = method_name ? Array(method_name) : klass.instance_methods(false) + klass_methods
 
-    results = methods.map do |method_name|
-      self.new(klass_name, method_name).validate
-    end.compact # nil == thick skin
+    counts = Hash.new(0)
+    methods.sort.each do |method_name|
+      result = self.new(klass_name, method_name).validate
+      counts[result] += 1
+    end
+    all_good = counts[false] == 0
 
-    if results.all? then
+    puts "Heckle Results:"
+    puts
+    puts "Passed    : %3d" % counts[true]
+    puts "Failed    : %3d" % counts[false]
+    puts "Thick Skin: %3d" % counts[nil]
+    puts
+
+    if all_good then
       puts "All heckling was thwarted! YAY!!!"
     else
-      count = results.find_all { |o| o }.size
-      puts "#{count} methods were successfully heckled."
       puts "Improve the tests and try again."
     end
 
-    results.all?
+    all_good
   end
 
   def initialize(klass_name=nil, method_name=nil)
