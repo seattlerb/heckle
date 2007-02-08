@@ -21,6 +21,16 @@ class TestUnitHeckler < Heckle
     load_test_files
     klass = klass_name.to_class
 
+    # Does the method exist?
+    klass_methods = klass.singleton_methods(false).collect {|meth| "self.#{meth}"}
+    if method_name
+      if method_name =~ /self\./
+        abort "Unknown method: #{klass_name}.#{method_name.gsub('self.', '')}" unless klass_methods.include? method_name
+      else
+        abort "Unknown method: #{klass_name}##{method_name}" unless klass.instance_methods(false).include? method_name
+      end
+    end
+
     initial_time = Time.now
 
     unless self.new(klass_name).tests_pass? then
@@ -38,8 +48,7 @@ class TestUnitHeckler < Heckle
     self.timeout = adjusted_timeout
 
     puts "Initial tests pass. Let's rumble."
-
-    klass_methods = klass.singleton_methods(false).collect {|meth| "self.#{meth}"}
+    
     methods = method_name ? Array(method_name) : klass.instance_methods(false) + klass_methods
 
     results = methods.map do |method_name|
