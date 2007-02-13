@@ -177,7 +177,7 @@ class Heckle < SexpProcessor
     when Symbol
       [:lit, rand_symbol]
     when Regexp
-      [:lit, Regexp.new(Regexp.escape(rand_string))]
+      [:lit, Regexp.new(Regexp.escape(rand_string.gsub(/\//, '\\/')))]
     when Range
       [:lit, rand_range]
     end

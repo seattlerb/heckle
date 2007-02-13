@@ -41,6 +41,9 @@ opts = OptionParser.new do |opts|
   end
 end
 
+looks_like_rails = test ?f, 'config/environment.rb'
+TestUnitHeckler.test_pattern = "test/**/*.rb" if looks_like_rails
+
 opts.parse!
 
 impl = ARGV.shift
