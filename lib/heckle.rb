@@ -4,22 +4,76 @@ require 'ruby2ruby'
 require 'timeout'
 require 'tempfile'
 
-class String
+class String # :nodoc:
   def to_class
     split(/::/).inject(Object) { |klass, name| klass.const_get(name) }
   end
 end
 
+##
+# Test Unit Sadism
+
 class Heckle < SexpProcessor
+
+  ##
+  # The version of Heckle you are using.
+
   VERSION = '1.3.0'
+
+  ##
+  # Nodes that can be mutated by Heckle.
+
   MUTATABLE_NODES = [:if, :lit, :str, :true, :false, :while, :until]
+
+  ##
+  # Is this platform MS Windows-like?
+
   WINDOZE = RUBY_PLATFORM =~ /mswin/
+
+  ##
+  # Path to the bit bucket.
+
   NULL_PATH = WINDOZE ? 'NUL:' : '/dev/null'
+
+  ##
+  # diff(1) executable
+
   DIFF = WINDOZE ? 'diff.exe' : 'diff'
 
-  attr_accessor(:klass_name, :method_name, :klass, :method, :mutatees,
-                :original_tree, :mutation_count, :node_count,
-                :failures, :count)
+  ##
+  # Mutation count
+
+  attr_accessor :count
+
+  ##
+  # Mutations that caused failures
+
+  attr_accessor :failures
+
+  ##
+  # Class being heckled
+
+  attr_accessor :klass
+
+  ##
+  # Name of class being heckled
+
+  attr_accessor :klass_name
+
+  ##
+  # Method being heckled
+
+  attr_accessor :method
+
+  ##
+  # Name of method being heckled
+
+  attr_accessor :method_name
+
+  attr_accessor :mutatees # :nodoc:
+  attr_accessor :mutation_count # :nodoc:
+  attr_accessor :node_count # :nodoc:
+  attr_accessor :original_tree # :nodoc:
 
   @@debug = false
   @@guess_timeout = true
@@ -37,6 +91,10 @@ class Heckle < SexpProcessor
   def self.guess_timeout?
     @@guess_timeout
   end
+
+  ##
+  # Creates a new Heckle that will heckle +klass_name+ and +method_name+,
+  # sending results to +reporter+.
 
   def initialize(klass_name=nil, method_name=nil, reporter = Reporter.new)
     super()
@@ -70,8 +128,9 @@ class Heckle < SexpProcessor
     @original_mutatees = mutatees.deep_clone
   end
 
-  ############################################################
-  ### Overwrite test_pass? for your own Heckle runner.
+  ##
+  # Overwrite test_pass? for your own Heckle runner.
+
   def tests_pass?
     raise NotImplementedError
   end
@@ -170,6 +229,9 @@ class Heckle < SexpProcessor
     mutate_node [:lit, exp.shift]
   end
 
+  ##
+  # Replaces the value of the :lit node with a random value.
+
   def mutate_lit(exp)
     case exp[1]
     when Fixnum, Float, Bignum
@@ -187,6 +249,9 @@ class Heckle < SexpProcessor
     mutate_node [:str, exp.shift]
   end
 
+  ##
+  # Replaces the value of the :str node with a random value.
+
   def mutate_str(node)
     [:str, rand_string]
   end
@@ -194,6 +259,9 @@ class Heckle < SexpProcessor
   def process_if(exp)
     mutate_node [:if, process(exp.shift), process(exp.shift), process(exp.shift)]
   end
+
+  ##
+  # Swaps the then and else parts of the :if node.
 
   def mutate_if(node)
     [:if, node[1], node[3], node[2]]
@@ -203,6 +271,9 @@ class Heckle < SexpProcessor
     mutate_node [:true]
   end
 
+  ##
+  # Swaps for a :false node.
+
   def mutate_true(node)
     [:false]
   end
@@ -210,6 +281,9 @@ class Heckle < SexpProcessor
   def process_false(exp)
     mutate_node [:false]
   end
+
+  ##
+  # Swaps for a :true node.
 
   def mutate_false(node)
     [:true]
@@ -220,6 +294,9 @@ class Heckle < SexpProcessor
     mutate_node [:while, cond, body, head_controlled]
   end
 
+  ##
+  # Swaps for a :until node.
+
   def mutate_while(node)
     [:until, node[1], node[2], node[3]]
   end
@@ -228,6 +305,9 @@ class Heckle < SexpProcessor
     cond, body, head_controlled = grab_conditional_loop_parts(exp)
     mutate_node [:until, cond, body, head_controlled]
   end
+
+  ##
+  # Swaps for a :while node.
 
   def mutate_until(node)
     [:while, node[1], node[2], node[3]]
@@ -350,9 +430,15 @@ class Heckle < SexpProcessor
     RubyToRuby.translate(klass_name.to_class, method_name)
   end
 
+  ##
+  # Returns a random Fixnum.
+
   def rand_number
     (rand(100) + 1)*((-1)**rand(2))
   end
+
+  ##
+  # Returns a random String
 
   def rand_string
     size = rand(50)
@@ -361,6 +447,9 @@ class Heckle < SexpProcessor
     str
   end
 
+  ##
+  # Returns a random Symbol
+
   def rand_symbol
     letters = ('a'..'z').to_a + ('A'..'Z').to_a
     str = ""
@@ -368,11 +457,17 @@ class Heckle < SexpProcessor
     :"#{str}"
   end
 
+  ##
+  # Returns a random Range
+
   def rand_range
     min = rand(50)
     max = min + rand(50)
     min..max
   end
+
+  ##
+  # Suppresses output on $stdout and $stderr.
 
   def silence_stream
     dead = File.open("/dev/null", "w")
