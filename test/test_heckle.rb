@@ -27,9 +27,10 @@ end
 class HeckleTestCase < Test::Unit::TestCase
   undef_method :default_test
   def setup
+    @nodes ||= Heckle::MUTATABLE_NODES
     data = self.class.name["TestHeckle".size..-1].gsub(/([A-Z])/, '_\1').downcase
     data = "_many_things" if data.empty?
-    @heckler = TestHeckler.new("Heckled", "uses#{data}")
+    @heckler = TestHeckler.new("Heckled", "uses#{data}", @nodes)
   end
 
   def teardown
@@ -38,6 +39,11 @@ class HeckleTestCase < Test::Unit::TestCase
 end
 
 class LiteralHeckleTestCase < HeckleTestCase
+  def setup
+    @nodes = [:lit, :str]
+    super
+  end
+
   def toggle(value, toggle)
     toggle ? self.class::TOGGLE_VALUE : value
   end
@@ -93,6 +99,10 @@ class TestHeckle < HeckleTestCase
   def test_should_grab_mutatees_from_method
     # expected is from tree of uses_while
     expected = {
+      :call => [[:call, [:lvar, :i], :<, [:array, [:lit, 10]]],
+                [:call, [:lvar, :i], :+, [:array, [:lit, 1]]],
+                [:call, [:str, "hi there"], :==,
+                        [:array, [:str, "changeling"]]]],
       :lit => [[:lit, 1], [:lit, 10], [:lit, 1]],
       :if => [[:if,
                [:call, [:str, "hi there"], :==, [:array, [:str, "changeling"]]],
@@ -121,7 +131,7 @@ class TestHeckle < HeckleTestCase
   end
 
   def test_should_count_mutatees_left
-    assert_equal 10, @heckler.mutations_left
+    assert_equal 13, @heckler.mutations_left
   end
 
   def test_reset
@@ -238,7 +248,6 @@ class TestHeckleRanges < LiteralHeckleTestCase
        [:lasgn, :i, [:lit, toggle(1..4, n == 3)]]]]]
   end
 end
-
 
 class TestHeckleSameLiteral < LiteralHeckleTestCase
   TOGGLE_VALUE = 6
@@ -386,6 +395,35 @@ class TestHeckleUntil < HeckleTestCase
   end
 end
 
+class TestHeckleCall < HeckleTestCase
+
+  def test_call_deleted
+    expected = [:defn, :uses_call,
+                [:scope,
+                 [:block,
+                  [:args],
+                  [:nil]]]]
+
+    @heckler.process(@heckler.current_tree)
+    assert_equal expected, @heckler.current_tree
+  end
+
+  def test_default_structure
+    expected = [:defn, :uses_call,
+                [:fbody,
+                 [:scope,
+                  [:block,
+                   [:args],
+                   [:call,
+                    [:vcall, :some_func],
+                    :+,
+                    [:array, [:vcall, :some_other_func]]]]]]]
+
+    assert_equal expected, @heckler.current_tree
+  end
+
+end
+
 class TestHeckleClassMethod < Test::Unit::TestCase
   def setup
     @heckler = TestHeckler.new("Heckled", "self.is_a_klass_method?")
@@ -414,8 +452,4 @@ class TestHeckleClassMethod < Test::Unit::TestCase
     assert_equal expected, @heckler.current_tree
   end
 end
- 
- 
- 
- 
- 
+

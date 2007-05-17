@@ -4,6 +4,8 @@ $:.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
 require 'test_unit_heckler'
 require 'optparse'
 
+nodes = Heckle::MUTATABLE_NODES
+
 opts = OptionParser.new do |opts|
   opts.banner = "Usage: #{File.basename($0)} class_name [method_name]"
   opts.on( "-v", "--verbose", "Loudly explain heckle run" ) do |opt|
@@ -26,7 +28,7 @@ opts = OptionParser.new do |opts|
     puts "!"*70
     puts
 
-    Heckle::MUTATABLE_NODES.replace [:if, :while, :until]
+    nodes = Heckle::BRANCH_NODES
   end
 
   opts.on( "-f", "--focus", "Apply the eye of sauron" ) do |opt|
@@ -63,4 +65,4 @@ unless impl then
   exit 1
 end
 
-exit TestUnitHeckler.validate(impl, meth) ? 0 : 1
+exit TestUnitHeckler.validate(impl, meth, nodes)

@@ -24,7 +24,8 @@ class TestUnitHeckler < Heckle
     Dir.glob(@@test_pattern).each {|test| require test}
   end
 
-  def self.validate(klass_name, method_name = nil)
+  def self.validate(klass_name, method_name = nil,
+                    nodes = Heckle::MUTATABLE_NODES)
     load_test_files
     klass = klass_name.to_class
 
@@ -61,7 +62,7 @@ class TestUnitHeckler < Heckle
 
     counts = Hash.new(0)
     methods.sort.each do |method_name|
-      result = self.new(klass_name, method_name).validate
+      result = self.new(klass_name, method_name, nodes).validate
       counts[result] += 1
     end
     all_good = counts[false] == 0
@@ -82,8 +83,8 @@ class TestUnitHeckler < Heckle
     all_good
   end
 
-  def initialize(klass_name=nil, method_name=nil)
-    super(klass_name, method_name)
+  def initialize(klass_name=nil, method_name=nil, nodes=Heckle::MUTATABLE_NODES)
+    super
     self.class.load_test_files unless @@tests_loaded
   end
 

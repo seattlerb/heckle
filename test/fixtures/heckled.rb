@@ -5,6 +5,10 @@ class Heckled
     @names = []
   end
 
+  def uses_call
+    some_func + some_other_func
+  end
+
   def uses_many_things
     i = 1
     while i < 10

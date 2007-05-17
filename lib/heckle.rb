@@ -18,12 +18,17 @@ class Heckle < SexpProcessor
   ##
   # The version of Heckle you are using.
 
-  VERSION = '1.3.0'
+  VERSION = '1.4.0'
 
   ##
-  # Nodes that can be mutated by Heckle.
+  # All nodes that can be mutated by Heckle.
 
-  MUTATABLE_NODES = [:if, :lit, :str, :true, :false, :while, :until]
+  MUTATABLE_NODES = [:call, :false, :if, :lit, :str, :true, :until, :while]
+
+  ##
+  # Branch node types.
+
+  BRANCH_NODES = [:if, :until, :while]
 
   ##
   # Is this platform MS Windows-like?
@@ -96,7 +101,8 @@ class Heckle < SexpProcessor
   # Creates a new Heckle that will heckle +klass_name+ and +method_name+,
   # sending results to +reporter+.
 
-  def initialize(klass_name=nil, method_name=nil, reporter = Reporter.new)
+  def initialize(klass_name = nil, method_name = nil,
+                 nodes = Heckle::MUTATABLE_NODES, reporter = Reporter.new)
     super()
 
     @klass_name = klass_name
@@ -116,7 +122,8 @@ class Heckle < SexpProcessor
     @node_count = Hash.new
     @count = 0
 
-    MUTATABLE_NODES.each {|type| @mutatees[type] = [] }
+    @mutatable_nodes = nodes
+    @mutatable_nodes.each {|type| @mutatees[type] = [] }
 
     @failures = []
 
@@ -212,6 +219,21 @@ class Heckle < SexpProcessor
 
   ############################################################
   ### Processing sexps
+
+  def process_call(exp)
+    recv = process(exp.shift)
+    meth = exp.shift
+    args = process(exp.shift)
+
+    out = [:call, recv, meth]
+    out << args if args
+
+    mutate_node out
+  end
+
+  def mutate_call(node)
+    [:nil]
+  end
 
   def process_defn(exp)
     self.method = exp.shift
@@ -317,7 +339,7 @@ class Heckle < SexpProcessor
     raise UnsupportedNodeError unless respond_to? "mutate_#{node.first}"
     increment_node_count node
 
-    if should_heckle? node
+    if should_heckle? node then
       increment_mutation_count node
       return send("mutate_#{node.first}", node)
     else
@@ -332,7 +354,7 @@ class Heckle < SexpProcessor
     return unless node.respond_to? :each
     return if node.is_a? String
     node.each { |child| walk_and_push(child) }
-    if MUTATABLE_NODES.include? node.first
+    if @mutatable_nodes.include? node.first
       @mutatees[node.first.to_sym].push(node)
       mutation_count[node] = 0
     end
