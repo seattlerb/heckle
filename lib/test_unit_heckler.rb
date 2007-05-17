@@ -2,14 +2,21 @@
 
 require 'test/unit/autorunner'
 require 'heckle'
+require 'zentest_mapping'
+
 $: << 'lib' << 'test'
 
 class TestUnitHeckler < Heckle
   @@test_pattern = 'test/test_*.rb'
-  @@tests_loaded = false;
+  @@tests_loaded = false
+  @@focus = false
 
   def self.test_pattern=(value)
     @@test_pattern = value
+  end
+
+  def self.focus=(value)
+    @@focus = value
   end
 
   def self.load_test_files
@@ -80,9 +87,17 @@ class TestUnitHeckler < Heckle
     self.class.load_test_files unless @@tests_loaded
   end
 
+  include ZenTestMapping
+
   def tests_pass?
     silence_stream do
+      if @@focus and @method_name then
+        name = normal_to_test @method_name.to_s
+        ARGV.clear
+        ARGV << "--name=/#{name}/"
+      end
       Test::Unit::AutoRunner.run
+      ARGV.clear
     end
   end
 end

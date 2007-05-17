@@ -29,6 +29,15 @@ opts = OptionParser.new do |opts|
     Heckle::MUTATABLE_NODES.replace [:if, :while, :until]
   end
 
+  opts.on( "-f", "--focus", "Apply the eye of sauron" ) do |opt|
+    puts "!"*70
+    puts "!!! Running in focused mode. FEEL THE EYE OF SAURON!!!"
+    puts "!"*70
+    puts
+
+    TestUnitHeckler.focus = true
+  end
+
   opts.on( "-T", "--timeout SECONDS", "The maximum time for a test run in seconds",
                                      "Used to catch infinite loops") do |timeout|
     Heckle.timeout = timeout.to_i
