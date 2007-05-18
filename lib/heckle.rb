@@ -248,7 +248,7 @@ class Heckle < SexpProcessor
   def process_asgn(type, exp)
     var = exp.shift
     if exp.empty? then
-      [type, var]
+      mutate_node [type, var]
     else
       mutate_node [type, var, process(exp.shift)]
     end
@@ -257,12 +257,14 @@ class Heckle < SexpProcessor
   def mutate_asgn(node)
     type = node.shift
     var = node.shift
-    val = node.last
-
-    if val.first == :nil then
-      [type, var, [:lit, 42]]
+    if node.empty? then
+      [:lasgn, :_heckle_dummy]
     else
-      [type, var, [:nil]]
+      if node.last.first == :nil then
+        [type, var, [:lit, 42]]
+      else
+        [type, var, [:nil]]
+      end
     end
   end
 

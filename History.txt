@@ -7,6 +7,7 @@
   * :iasgn nodes are now heckled.
   * :gasgn nodes are now heckled.
   * :lasgn nodes are now heckled.
+  * :masgn nodes are now heckled poorly.
   * Can give list of explicit nodes to mutate (-n).
   * Can give list of nodes to exclude from mutations (-m).
 * N minor enhancements:

@@ -534,6 +534,8 @@ class TestHeckleDasgncurr < HeckleTestCase
                       [:dasgn_curr, :dvar, [:nil]]]]]]]
 
     @heckler.process(@heckler.current_tree)
+    @heckler.reset_tree
+    @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
 
@@ -549,6 +551,8 @@ class TestHeckleDasgncurr < HeckleTestCase
                       [:dasgn_curr, :dvar, [:lit, 5]],
                       [:dasgn_curr, :dvar, [:lit, 42]]]]]]]
 
+    @heckler.process(@heckler.current_tree)
+    @heckler.reset_tree
     @heckler.process(@heckler.current_tree)
     @heckler.reset_tree
     @heckler.process(@heckler.current_tree)
@@ -675,7 +679,10 @@ class TestHeckleMasgn < HeckleTestCase
                  [:block,
                   [:args],
                   [:masgn,
-                    [:array, [:iasgn, :@a], [:gasgn, :$b], [:lasgn, :c]],
+                    [:array,
+                      [:lasgn, :_heckle_dummy],
+                      [:gasgn, :$b],
+                      [:lasgn, :c]],
                     [:array, [:lit, 5], [:lit, 6], [:lit, 7]]]]]]
 
     @heckler.process(@heckler.current_tree)
