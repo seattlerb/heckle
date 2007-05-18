@@ -673,4 +673,11 @@ class Heckle < SexpProcessor
     meth.sub(/mutate_/, '').intern
   end - [:asgn, :node] # Ignore these methods
 
+  ##
+  # All assignment nodes that can be mutated by Heckle..
+
+  ASGN_NODES = MUTATABLE_NODES.map { |n| n.to_s }.grep(/asgn/).map do |n|
+    n.intern
+  end
+
 end

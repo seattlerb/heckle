@@ -22,7 +22,16 @@ opts = OptionParser.new do |opts|
     TestUnitHeckler.test_pattern = pattern
   end
 
-  opts.on( "-b", "--branches-only", "Only mutate branches" ) do |opt|
+  opts.on(       "--assignments", "Only mutate assignments" ) do |opt|
+    puts "!"*70
+    puts "!!! Heckling assignments only"
+    puts "!"*70
+    puts
+
+    nodes = Heckle::ASGN_NODES
+  end
+
+  opts.on( "-b", "--branches", "Only mutate branches" ) do |opt|
     puts "!"*70
     puts "!!! Heckling branches only"
     puts "!"*70
@@ -45,13 +54,13 @@ opts = OptionParser.new do |opts|
     Heckle.timeout = timeout.to_i
     puts "Setting timeout at #{timeout} seconds."
   end
-  
+
   opts.on( "-n", "--nodes NODES", "Nodes to mutate",
                                   "Possible values: #{Heckle::MUTATABLE_NODES.join(',')}" ) do |opt|
     nodes = opt.split(',').collect {|n| n.to_sym }
     puts "Mutating nodes: #{nodes.inspect}"
   end
-  
+
   opts.on( "-x", "--exclude-nodes NODES", "Nodes to exclude") do |opt|
     exclusions = opt.split(',').collect {|n| n.to_sym }
     nodes = nodes - exclusions

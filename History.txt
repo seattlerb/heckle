@@ -1,11 +1,12 @@
 == 1.4.0 / 2007-05-18
 
-* N major enhancements:
+* 2 major enhancements:
   * Method calls are now heckled (by removal).
   * Assignments are now heckled (by value changing).
-* N minor enhancements:
-  * Added focus mode to feel the Eye of Sauron.
-  * Specific nodes to be included/excluded in heckle with -n/-m.
+* 3 minor enhancements:
+  * Added --focus to feel the Eye of Sauron (specify unit tests to run).
+  * Specify nodes to be included/excluded in heckle with -n/-x.
+  * Test only assignments with --assignments
 
 == 1.3.0 / 2007-02-12
 
