@@ -104,6 +104,7 @@ class TestHeckle < HeckleTestCase
                 [:call, [:str, "hi there"], :==,
                         [:array, [:str, "changeling"]]]],
       :dasgn => [], # no dasgns here
+      :iasgn => [], # no iasgns here
       :lasgn => [[:lasgn, :i, [:lit, 1]],
                  [:lasgn, :i, [:call, [:lvar, :i], :+, [:array, [:lit, 1]]]]],
       :lit => [[:lit, 1], [:lit, 10], [:lit, 1]],

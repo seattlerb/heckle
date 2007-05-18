@@ -21,22 +21,6 @@ class Heckle < SexpProcessor
   VERSION = '1.4.0'
 
   ##
-  # All nodes that can be mutated by Heckle.
-
-  MUTATABLE_NODES = [
-    :call,
-    :dasgn,
-    :false,
-    :if,
-    :lasgn,
-    :lit,
-    :str,
-    :true,
-    :until,
-    :while
-  ]
-
-  ##
   # Branch node types.
 
   BRANCH_NODES = [:if, :until, :while]
@@ -640,4 +624,12 @@ class Heckle < SexpProcessor
       puts "Tests failed -- this is good"
     end
   end
+
+  ##
+  # All nodes that can be mutated by Heckle.
+
+  MUTATABLE_NODES = instance_methods.grep(/mutate_/).sort.map do |meth|
+    meth.sub(/mutate_/, '').intern
+  end - [:asgn, :node] # Ignore these methods
+
 end
