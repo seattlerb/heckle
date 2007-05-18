@@ -103,8 +103,9 @@ class TestHeckle < HeckleTestCase
                 [:call, [:lvar, :i], :+, [:array, [:lit, 1]]],
                 [:call, [:str, "hi there"], :==,
                         [:array, [:str, "changeling"]]]],
+      :cvasgn => [], # no cvasgns here
       :dasgn => [], # no dasgns here
-      :dasgn_curr => [], # no dasgns here
+      :dasgn_curr => [], # no dasgn_currs here
       :iasgn => [], # no iasgns here
       :gasgn => [], # no gasgns here
       :lasgn => [[:lasgn, :i, [:lit, 1]],
@@ -463,6 +464,41 @@ class TestHeckleClassMethod < Test::Unit::TestCase
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
+end
+
+class TestHeckleCvasgn < HeckleTestCase
+
+  def setup
+    @nodes = [:cvasgn]
+    super
+  end
+
+  def test_cvasgn_val
+    expected = [:defn, :uses_cvasgn,
+                [:scope,
+                 [:block,
+                  [:args],
+                  [:cvasgn, :@@cvar, [:nil]],
+                  [:cvasgn, :@@cvar, [:nil]]]]]
+
+    @heckler.process(@heckler.current_tree)
+    assert_equal expected, @heckler.current_tree
+  end
+
+  def test_cvasgn_nil
+    expected = [:defn, :uses_cvasgn,
+                [:scope,
+                 [:block,
+                  [:args],
+                  [:cvasgn, :@@cvar, [:lit, 5]],
+                  [:cvasgn, :@@cvar, [:lit, 42]]]]]
+
+    @heckler.process(@heckler.current_tree)
+    @heckler.reset_tree
+    @heckler.process(@heckler.current_tree)
+    assert_equal expected, @heckler.current_tree
+  end
+
 end
 
 class TestHeckleDasgn < HeckleTestCase

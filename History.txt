@@ -2,10 +2,11 @@
 
 * N major enhancements:
   * :call nodes are now heckled.
+  * :cvasgn nodes are now heckled.
   * :dasgn nodes are now heckled.
   * :dasgn_curr nodes are now heckled.
-  * :iasgn nodes are now heckled.
   * :gasgn nodes are now heckled.
+  * :iasgn nodes are now heckled.
   * :lasgn nodes are now heckled.
   * :masgn nodes are now heckled poorly.
   * Can give list of explicit nodes to mutate (-n).

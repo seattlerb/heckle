@@ -268,6 +268,16 @@ class Heckle < SexpProcessor
     end
   end
 
+  def process_cvasgn(exp)
+    process_asgn :cvasgn, exp
+  end
+
+  ##
+  # Replaces the value of the cvasgn with nil if its some value, and 42 if its
+  # nil.
+
+  alias mutate_cvasgn mutate_asgn
+
   def process_dasgn(exp)
     process_asgn :dasgn, exp
   end
