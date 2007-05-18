@@ -3,6 +3,7 @@
 * N major enhancements:
   * :call nodes are now heckled.
   * :dasgn nodes are now heckled.
+  * :dasgn_curr nodes are now heckled.
   * :iasgn nodes are now heckled.
   * :lasgn nodes are now heckled.
 * N minor enhancements:

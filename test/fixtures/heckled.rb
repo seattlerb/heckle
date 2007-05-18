@@ -18,6 +18,13 @@ class Heckled
     end
   end
 
+  def uses_dasgncurr
+    loop do |dvar|
+      dvar = 5
+      dvar = nil
+    end
+  end
+
   def uses_iasgn
     @ivar = 5
     @ivar = nil
