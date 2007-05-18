@@ -9,6 +9,11 @@ class Heckled
     some_func + some_other_func
   end
 
+  def uses_lasgn
+    lvar = 5
+    lvar = nil
+  end
+
   def uses_many_things
     i = 1
     while i < 10

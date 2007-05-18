@@ -23,7 +23,17 @@ class Heckle < SexpProcessor
   ##
   # All nodes that can be mutated by Heckle.
 
-  MUTATABLE_NODES = [:call, :false, :if, :lit, :str, :true, :until, :while]
+  MUTATABLE_NODES = [
+    :call,
+    :false,
+    :if,
+    :lasgn,
+    :lit,
+    :str,
+    :true,
+    :until,
+    :while
+  ]
 
   ##
   # Branch node types.
@@ -231,6 +241,9 @@ class Heckle < SexpProcessor
     mutate_node out
   end
 
+  ##
+  # Replaces the call node with nil.
+
   def mutate_call(node)
     [:nil]
   end
@@ -245,6 +258,26 @@ class Heckle < SexpProcessor
   ensure
     @mutated = false
     reset_node_count
+  end
+
+  def process_lasgn(exp)
+    mutate_node [:lasgn, exp.shift, process(exp.shift)]
+  end
+
+  ##
+  # Replaces the value of the lasgn with nil if its some value, and 42 if its
+  # nil.
+
+  def mutate_lasgn(node)
+    node.shift
+    var = node.shift
+    val = node.last
+
+    if val.first == :nil then
+      [:lasgn, var, [:lit, 42]]
+    else
+      [:lasgn, var, [:nil]]
+    end
   end
 
   def process_lit(exp)

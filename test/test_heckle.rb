@@ -103,6 +103,8 @@ class TestHeckle < HeckleTestCase
                 [:call, [:lvar, :i], :+, [:array, [:lit, 1]]],
                 [:call, [:str, "hi there"], :==,
                         [:array, [:str, "changeling"]]]],
+      :lasgn => [[:lasgn, :i, [:lit, 1]],
+                 [:lasgn, :i, [:call, [:lvar, :i], :+, [:array, [:lit, 1]]]]],
       :lit => [[:lit, 1], [:lit, 10], [:lit, 1]],
       :if => [[:if,
                [:call, [:str, "hi there"], :==, [:array, [:str, "changeling"]]],
@@ -131,7 +133,7 @@ class TestHeckle < HeckleTestCase
   end
 
   def test_should_count_mutatees_left
-    assert_equal 13, @heckler.mutations_left
+    assert_equal 15, @heckler.mutations_left
   end
 
   def test_reset
@@ -321,6 +323,12 @@ class TestHeckleIf < HeckleTestCase
 end
 
 class TestHeckleBoolean < HeckleTestCase
+
+  def setup
+    @nodes = [:true, :false]
+    super
+  end
+
   def toggle(value, toggle)
     (toggle ? ! value : value).to_s.intern
   end
@@ -451,5 +459,40 @@ class TestHeckleClassMethod < Test::Unit::TestCase
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
+end
+
+class TestHeckleLasgn < HeckleTestCase
+
+  def setup
+    @nodes = [:lasgn]
+    super
+  end
+
+  def test_lasgn_val
+    expected = [:defn, :uses_lasgn,
+                [:scope,
+                 [:block,
+                  [:args],
+                  [:lasgn, :lvar, [:nil]],
+                  [:lasgn, :lvar, [:nil]]]]]
+
+    @heckler.process(@heckler.current_tree)
+    assert_equal expected, @heckler.current_tree
+  end
+
+  def test_lasgn_nil
+    expected = [:defn, :uses_lasgn,
+                [:scope,
+                 [:block,
+                  [:args],
+                  [:lasgn, :lvar, [:lit, 5]],
+                  [:lasgn, :lvar, [:lit, 42]]]]]
+
+    @heckler.process(@heckler.current_tree)
+    @heckler.reset_tree
+    @heckler.process(@heckler.current_tree)
+    assert_equal expected, @heckler.current_tree
+  end
+
 end
 
