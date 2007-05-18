@@ -461,6 +461,41 @@ class TestHeckleClassMethod < Test::Unit::TestCase
   end
 end
 
+class TestHeckleIasgn < HeckleTestCase
+
+  def setup
+    @nodes = [:iasgn]
+    super
+  end
+
+  def test_iasgn_val
+    expected = [:defn, :uses_iasgn,
+                [:scope,
+                 [:block,
+                  [:args],
+                  [:iasgn, :@ivar, [:nil]],
+                  [:iasgn, :@ivar, [:nil]]]]]
+
+    @heckler.process(@heckler.current_tree)
+    assert_equal expected, @heckler.current_tree
+  end
+
+  def test_iasgn_nil
+    expected = [:defn, :uses_iasgn,
+                [:scope,
+                 [:block,
+                  [:args],
+                  [:iasgn, :@ivar, [:lit, 5]],
+                  [:iasgn, :@ivar, [:lit, 42]]]]]
+
+    @heckler.process(@heckler.current_tree)
+    @heckler.reset_tree
+    @heckler.process(@heckler.current_tree)
+    assert_equal expected, @heckler.current_tree
+  end
+
+end
+
 class TestHeckleLasgn < HeckleTestCase
 
   def setup

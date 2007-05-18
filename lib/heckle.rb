@@ -260,6 +260,26 @@ class Heckle < SexpProcessor
     reset_node_count
   end
 
+  def process_iasgn(exp)
+    mutate_node [:iasgn, exp.shift, process(exp.shift)]
+  end
+
+  ##
+  # Replaces the value of the iasgn with nil if its some value, and 42 if its
+  # nil.
+
+  def mutate_iasgn(node)
+    node.shift
+    var = node.shift
+    val = node.last
+
+    if val.first == :nil then
+      [:iasgn, var, [:lit, 42]]
+    else
+      [:iasgn, var, [:nil]]
+    end
+  end
+
   def process_lasgn(exp)
     mutate_node [:lasgn, exp.shift, process(exp.shift)]
   end

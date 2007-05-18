@@ -9,6 +9,11 @@ class Heckled
     some_func + some_other_func
   end
 
+  def uses_iasgn
+    @ivar = 5
+    @ivar = nil
+  end
+
   def uses_lasgn
     lvar = 5
     lvar = nil

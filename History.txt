@@ -3,6 +3,7 @@
 * N major enhancements:
   * :call nodes are now heckled.
   * :lasgn nodes are now heckled.
+  * :iasgn nodes are now heckled.
 * N minor enhancements:
   * Added focus mode to feel the Eye of Sauron.
 
