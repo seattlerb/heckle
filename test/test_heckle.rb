@@ -662,3 +662,25 @@ class TestHeckleLasgn < HeckleTestCase
 
 end
 
+class TestHeckleMasgn < HeckleTestCase
+
+  def setup
+    @nodes = [:dasgn, :dasgn_curr, :iasgn, :gasgn, :lasgn]
+    super
+  end
+
+  def test_masgn
+    expected = [:defn, :uses_masgn,
+                [:scope,
+                 [:block,
+                  [:args],
+                  [:masgn,
+                    [:array, [:iasgn, :@a], [:gasgn, :$b], [:lasgn, :c]],
+                    [:array, [:lit, 5], [:lit, 6], [:lit, 7]]]]]]
+
+    @heckler.process(@heckler.current_tree)
+    assert_equal expected, @heckler.current_tree
+  end
+
+end
+

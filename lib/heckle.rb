@@ -245,6 +245,15 @@ class Heckle < SexpProcessor
     reset_node_count
   end
 
+  def process_asgn(type, exp)
+    var = exp.shift
+    if exp.empty? then
+      [type, var]
+    else
+      mutate_node [type, var, process(exp.shift)]
+    end
+  end
+
   def mutate_asgn(node)
     type = node.shift
     var = node.shift
@@ -258,7 +267,7 @@ class Heckle < SexpProcessor
   end
 
   def process_dasgn(exp)
-    mutate_node [:dasgn, exp.shift, process(exp.shift)]
+    process_asgn :dasgn, exp
   end
 
   ##
@@ -268,7 +277,7 @@ class Heckle < SexpProcessor
   alias mutate_dasgn mutate_asgn
 
   def process_dasgn_curr(exp)
-    mutate_node [:dasgn_curr, exp.shift, process(exp.shift)]
+    process_asgn :dasgn_curr, exp
   end
 
   ##
@@ -278,7 +287,7 @@ class Heckle < SexpProcessor
   alias mutate_dasgn_curr mutate_asgn
 
   def process_iasgn(exp)
-    mutate_node [:iasgn, exp.shift, process(exp.shift)]
+    process_asgn :iasgn, exp
   end
 
   ##
@@ -288,7 +297,7 @@ class Heckle < SexpProcessor
   alias mutate_iasgn mutate_asgn
 
   def process_gasgn(exp)
-    mutate_node [:gasgn, exp.shift, process(exp.shift)]
+    process_asgn :gasgn, exp
   end
 
   ##
@@ -298,7 +307,7 @@ class Heckle < SexpProcessor
   alias mutate_gasgn mutate_asgn
 
   def process_lasgn(exp)
-    mutate_node [:lasgn, exp.shift, process(exp.shift)]
+    process_asgn :lasgn, exp
   end
 
   ##

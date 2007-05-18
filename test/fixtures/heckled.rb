@@ -40,6 +40,10 @@ class Heckled
     lvar = nil
   end
 
+  def uses_masgn
+    @a, $b, c = 5, 6, 7
+  end
+
   def uses_many_things
     i = 1
     while i < 10
