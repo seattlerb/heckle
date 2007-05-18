@@ -25,6 +25,7 @@ class Heckle < SexpProcessor
 
   MUTATABLE_NODES = [
     :call,
+    :dasgn,
     :false,
     :if,
     :lasgn,
@@ -260,6 +261,28 @@ class Heckle < SexpProcessor
     reset_node_count
   end
 
+  def mutate_asgn(node)
+    type = node.shift
+    var = node.shift
+    val = node.last
+
+    if val.first == :nil then
+      [type, var, [:lit, 42]]
+    else
+      [type, var, [:nil]]
+    end
+  end
+
+  def process_dasgn(exp)
+    mutate_node [:dasgn, exp.shift, process(exp.shift)]
+  end
+
+  ##
+  # Replaces the value of the dasgn with nil if its some value, and 42 if its
+  # nil.
+
+  alias mutate_dasgn mutate_asgn
+
   def process_iasgn(exp)
     mutate_node [:iasgn, exp.shift, process(exp.shift)]
   end
@@ -268,17 +291,7 @@ class Heckle < SexpProcessor
   # Replaces the value of the iasgn with nil if its some value, and 42 if its
   # nil.
 
-  def mutate_iasgn(node)
-    node.shift
-    var = node.shift
-    val = node.last
-
-    if val.first == :nil then
-      [:iasgn, var, [:lit, 42]]
-    else
-      [:iasgn, var, [:nil]]
-    end
-  end
+  alias mutate_iasgn mutate_asgn
 
   def process_lasgn(exp)
     mutate_node [:lasgn, exp.shift, process(exp.shift)]
@@ -288,17 +301,7 @@ class Heckle < SexpProcessor
   # Replaces the value of the lasgn with nil if its some value, and 42 if its
   # nil.
 
-  def mutate_lasgn(node)
-    node.shift
-    var = node.shift
-    val = node.last
-
-    if val.first == :nil then
-      [:lasgn, var, [:lit, 42]]
-    else
-      [:lasgn, var, [:nil]]
-    end
-  end
+  alias mutate_lasgn mutate_asgn
 
   def process_lit(exp)
     mutate_node [:lit, exp.shift]

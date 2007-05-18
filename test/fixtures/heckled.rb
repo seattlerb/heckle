@@ -9,6 +9,15 @@ class Heckled
     some_func + some_other_func
   end
 
+  def uses_dasgn
+    loop do |dvar|
+      loop do
+        dvar = 5
+        dvar = nil
+      end
+    end
+  end
+
   def uses_iasgn
     @ivar = 5
     @ivar = nil
