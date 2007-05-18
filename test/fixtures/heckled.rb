@@ -30,6 +30,11 @@ class Heckled
     @ivar = nil
   end
 
+  def uses_gasgn
+    $gvar = 5
+    $gvar = nil
+  end
+
   def uses_lasgn
     lvar = 5
     lvar = nil

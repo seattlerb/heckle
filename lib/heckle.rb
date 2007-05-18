@@ -287,6 +287,16 @@ class Heckle < SexpProcessor
 
   alias mutate_iasgn mutate_asgn
 
+  def process_gasgn(exp)
+    mutate_node [:gasgn, exp.shift, process(exp.shift)]
+  end
+
+  ##
+  # Replaces the value of the gasgn with nil if its some value, and 42 if its
+  # nil.
+
+  alias mutate_gasgn mutate_asgn
+
   def process_lasgn(exp)
     mutate_node [:lasgn, exp.shift, process(exp.shift)]
   end
