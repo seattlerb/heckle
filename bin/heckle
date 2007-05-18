@@ -45,6 +45,18 @@ opts = OptionParser.new do |opts|
     Heckle.timeout = timeout.to_i
     puts "Setting timeout at #{timeout} seconds."
   end
+  
+  opts.on( "-n", "--nodes NODES", "Nodes to mutate",
+                                  "Possible values: #{Heckle::MUTATABLE_NODES.join(',')}" ) do |opt|
+    nodes = opt.split(',').collect {|n| n.to_sym }
+    puts "Mutating nodes: #{nodes.inspect}"
+  end
+  
+  opts.on( "-x", "--exclude-nodes NODES", "Nodes to exclude") do |opt|
+    exclusions = opt.split(',').collect {|n| n.to_sym }
+    nodes = nodes - exclusions
+    puts "Mutating without nodes: #{exclusions.inspect}"
+  end
 
   opts.on( "-h", "--help", "Show this message") do |opt|
     puts opts

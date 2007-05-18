@@ -7,6 +7,8 @@
   * :iasgn nodes are now heckled.
   * :gasgn nodes are now heckled.
   * :lasgn nodes are now heckled.
+  * Can give list of explicit nodes to mutate (-n).
+  * Can give list of nodes to exclude from mutations (-m).
 * N minor enhancements:
   * Added focus mode to feel the Eye of Sauron.
 
