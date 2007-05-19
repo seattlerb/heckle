@@ -223,7 +223,13 @@ class Heckle < SexpProcessor
     out = [:call, recv, meth]
     out << args if args
 
-    mutate_node out
+    stack = caller.map { |s| s[/process_\w+/] }.compact
+
+    if stack.first != "process_iter" then
+      mutate_node out
+    else
+      out
+    end
   end
 
   ##
@@ -243,6 +249,13 @@ class Heckle < SexpProcessor
   ensure
     @mutated = false
     reset_node_count
+  end
+
+  ##
+  # So process_call works correctly
+
+  def process_iter(exp)
+    [:iter, process(exp.shift), process(exp.shift), process(exp.shift)]
   end
 
   def process_asgn(type, exp)

@@ -9,6 +9,10 @@ class Heckled
     some_func + some_other_func
   end
 
+  def uses_callblock
+    x.y { 1 }
+  end
+
   def uses_cvasgn
     @@cvar = 5
     @@cvar = nil
@@ -139,7 +143,7 @@ class Heckled
 
   def uses_nothing
   end
-  
+
   def self.is_a_klass_method?
     true
   end

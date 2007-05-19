@@ -437,6 +437,26 @@ class TestHeckleCall < HeckleTestCase
 
 end
 
+class TestHeckleCallblock < HeckleTestCase
+
+  def setup
+    @nodes = [:call]
+    super
+  end
+
+  def test_callblock_deleted
+    expected = [:defn, :uses_callblock,
+                [:scope,
+                 [:block,
+                  [:args],
+                  [:iter, [:call, [:vcall, :x], :y], nil, [:lit, 1]]]]]
+
+    @heckler.process(@heckler.current_tree)
+    assert_equal expected, @heckler.current_tree
+  end
+
+end
+
 class TestHeckleClassMethod < Test::Unit::TestCase
   def setup
     @heckler = TestHeckler.new("Heckled", "self.is_a_klass_method?")
