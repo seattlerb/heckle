@@ -14,6 +14,8 @@ Hoe.new('heckle', Heckle::VERSION) do |p|
   p.changes = p.paragraphs_of('History.txt', 0..1).join("\n\n")
 
   p.extra_deps << ['ruby2ruby', '>= 1.1.0']
+  p.extra_deps << ['ZenTest', '>= 3.5.2']
+  
 end
 
 # vim: syntax=Ruby
