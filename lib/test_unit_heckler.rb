@@ -97,8 +97,9 @@ class TestUnitHeckler < Heckle
         ARGV.clear
         ARGV << "--name=/#{name}/"
       end
-      Test::Unit::AutoRunner.run
+      result = Test::Unit::AutoRunner.run
       ARGV.clear
+      result
     end
   end
 end
