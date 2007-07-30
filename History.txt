@@ -1,3 +1,9 @@
+=== 1.4.2 / ??
+
+* N bug fixes:
+  * Fix bug #11435 where [:iter, [:call], ...] would cause an endless
+    loop.  Reported by Thomas Preymesser.
+
 === 1.4.1 / 2007-06-05
 
 * 3 bug fixes:

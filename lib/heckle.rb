@@ -18,7 +18,7 @@ class Heckle < SexpProcessor
   ##
   # The version of Heckle you are using.
 
-  VERSION = '1.4.1'
+  VERSION = '1.4.2'
 
   ##
   # Branch node types.
@@ -228,6 +228,8 @@ class Heckle < SexpProcessor
     if stack.first != "process_iter" then
       mutate_node out
     else
+      increment_node_count out
+        increment_mutation_count out if should_heckle? out
       out
     end
   end
@@ -243,6 +245,23 @@ class Heckle < SexpProcessor
     self.method = exp.shift
     result = [:defn, method]
     result << process(exp.shift) until exp.empty?
+    heckle(result) if method == method_name
+
+    return result
+  ensure
+    @mutated = false
+    reset_node_count
+  end
+
+  def process_defs(exp)
+    defs_klass = exp.shift.first
+    defs_method = exp.shift
+
+    self.method = "#{defs_klass}.#{defs_method}".intern
+    
+    result = [:defs, [klass], defs_method]
+    result << process(exp.shift) until exp.empty?
+
     heckle(result) if method == method_name
 
     return result
@@ -694,3 +713,4 @@ class Heckle < SexpProcessor
   end
 
 end
+

@@ -467,7 +467,7 @@ class TestHeckleClassMethod < Test::Unit::TestCase
   end
   
   def test_default_structure
-    expected = [:defn, :"self.is_a_klass_method?",
+    expected = [:defs, [:self], :is_a_klass_method?,
                 [:scope,
                  [:block,
                   [:args],
@@ -476,7 +476,7 @@ class TestHeckleClassMethod < Test::Unit::TestCase
   end
   
   def test_heckle_class_methods
-    expected = [:defn, :"self.is_a_klass_method?",
+    expected = [:defs, [:self], :is_a_klass_method?,
                 [:scope,
                  [:block,
                   [:args],
