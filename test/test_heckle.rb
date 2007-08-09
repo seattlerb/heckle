@@ -28,9 +28,13 @@ class HeckleTestCase < Test::Unit::TestCase
   undef_method :default_test
   def setup
     @nodes ||= Heckle::MUTATABLE_NODES
-    data = self.class.name["TestHeckle".size..-1].gsub(/([A-Z])/, '_\1').downcase
-    data = "_many_things" if data.empty?
-    @heckler = TestHeckler.new("Heckled", "uses#{data}", @nodes)
+    unless defined? @name then
+      data = self.class.name["TestHeckle".size..-1]
+      data = data.gsub(/([A-Z])/, '_\1').downcase
+      data = "_many_things" if data.empty?
+      @name = "uses#{data}"
+    end
+    @heckler = TestHeckler.new("Heckled", @name, @nodes)
   end
 
   def teardown
@@ -78,14 +82,14 @@ class TestHeckle < HeckleTestCase
                    s(:block,
                      s(:lasgn, :i, s(:lit, 1)),
                      s(:while,
-                       s(:call, s(:lvar, :i), :<, s(:array, s(:lit, 10))),
+                       s(:call, s(:lvar, :i), :<, s(:arglist, s(:lit, 10))),
                        s(:block,
-                         s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:array, s(:lit, 1)))),
+                         s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:arglist, s(:lit, 1)))),
                          s(:until, s(:call, nil, :some_func, s(:arglist)),
                            s(:call, nil, :some_other_func, s(:arglist)), true),
                          s(:if,
                            s(:call, s(:str, "hi there"), :==,
-                             s(:array, s(:str, "changeling"))),
+                             s(:arglist, s(:str, "changeling"))),
                            s(:return, s(:true)),
                            nil),
                          s(:return, s(:false))),
@@ -98,36 +102,36 @@ class TestHeckle < HeckleTestCase
   def test_should_grab_mutatees_from_method
     # expected is from tree of uses_while
     expected = {
-      :call => [s(:call, s(:lvar, :i), :<, s(:array, s(:lit, 10))),
-                s(:call, s(:lvar, :i), :+, s(:array, s(:lit, 1))),
+      :call => [s(:call, s(:lvar, :i), :<, s(:arglist, s(:lit, 10))),
+                s(:call, s(:lvar, :i), :+, s(:arglist, s(:lit, 1))),
                 s(:call, nil, :some_func, s(:arglist)), # FIX: why added?
                 s(:call, nil, :some_other_func, s(:arglist)), # FIX: why added?
                 s(:call, s(:str, "hi there"), :==,
-                  s(:array, s(:str, "changeling")))],
+                  s(:arglist, s(:str, "changeling")))],
       :cvasgn => [],     # no cvasgns here
       :dasgn => [],      # no dasgns here
       :dasgn_curr => [], # no dasgn_currs here
       :iasgn => [],      # no iasgns here
       :gasgn => [],      # no gasgns here
       :lasgn => [s(:lasgn, :i, s(:lit, 1)),
-                 s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:array, s(:lit, 1))))],
+                 s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:arglist, s(:lit, 1))))],
       :lit => [s(:lit, 1), s(:lit, 10), s(:lit, 1)],
       :if => [s(:if,
-                s(:call, s(:str, "hi there"), :==, s(:array, s(:str, "changeling"))),
+                s(:call, s(:str, "hi there"), :==, s(:arglist, s(:str, "changeling"))),
                 s(:return, s(:true)),
                 nil)],
       :str => [s(:str, "hi there"), s(:str, "changeling")],
       :true => [s(:true)],
       :false => [s(:false)],
       :while => [s(:while,
-                   s(:call, s(:lvar, :i), :<, s(:array, s(:lit, 10))),
+                   s(:call, s(:lvar, :i), :<, s(:arglist, s(:lit, 10))),
                    s(:block,
-                     s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:array, s(:lit, 1)))),
+                     s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:arglist, s(:lit, 1)))),
                      s(:until, s(:call, nil, :some_func, s(:arglist)),
                        s(:call, nil, :some_other_func, s(:arglist)), true),
                      s(:if,
                        s(:call, s(:str, "hi there"), :==,
-                         s(:array, s(:str, "changeling"))),
+                         s(:arglist, s(:str, "changeling"))),
                        s(:return, s(:true)),
                        nil),
                      s(:return, s(:false))),
@@ -213,8 +217,8 @@ class TestHeckleNumericLiterals < HeckleTestCase
         s(:block,
           s(:lasgn, :i, s(:lit, toggle(1, 1 == n))),
           s(:lasgn, :i, s(:call, s(:lvar, :i), :+,
-                          s(:array, s(:lit, toggle(2147483648, 2 == n))))),
-          s(:lasgn, :i, s(:call, s(:lvar, :i), :-, s(:array, s(:lit, toggle(3.5, 3 == n))))))))
+                          s(:arglist, s(:lit, toggle(2147483648, 2 == n))))),
+          s(:lasgn, :i, s(:call, s(:lvar, :i), :-, s(:arglist, s(:lit, toggle(3.5, 3 == n))))))))
   end
 end
 
@@ -282,9 +286,9 @@ class TestHeckleStrings < LiteralHeckleTestCase
       s(:args),
       s(:scope,
         s(:block,
-          s(:call, s(:ivar, :@names), :<<, s(:array, s(:str, toggle("Hello, Robert", n == 1)))),
-          s(:call, s(:ivar, :@names), :<<, s(:array, s(:str, toggle("Hello, Jeff", n == 2)))),
-          s(:call, s(:ivar, :@names), :<<, s(:array, s(:str, toggle("Hi, Frank", n == 3)))))))
+          s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, toggle("Hello, Robert", n == 1)))),
+          s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, toggle("Hello, Jeff", n == 2)))),
+          s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, toggle("Hi, Frank", n == 3)))))))
   end
 end
 
@@ -452,7 +456,7 @@ class TestHeckleCall < HeckleTestCase
                      s(:call,
                        s(:call, nil, :some_func, s(:arglist)),
                        :+,
-                       s(:array, s(:call, nil, :some_other_func, s(:arglist)))))))
+                       s(:arglist, s(:call, nil, :some_other_func, s(:arglist)))))))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -476,7 +480,7 @@ class TestHeckleCallblock < HeckleTestCase
                        nil,
                        s(:lit, 1)))))
 
-    assert_equal :foo, @heckler.current_tree
+    assert_equal expected, @heckler.current_tree
   end
   def test_callblock_deleted
     expected = s(:defn, :uses_callblock,
@@ -484,7 +488,7 @@ class TestHeckleCallblock < HeckleTestCase
                  s(:scope,
                    s(:block,
                      s(:iter,
-                       s(:call, s(:call, nil, :x, s(:arglist)), :y),
+                       s(:call, s(:nil), :y, s(:arglist)),
                        nil,
                        s(:lit, 1)))))
 
@@ -493,13 +497,11 @@ class TestHeckleCallblock < HeckleTestCase
   end
 end
 
-class TestHeckleClassMethod < Test::Unit::TestCase
+class TestHeckleClassMethod < HeckleTestCase
   def setup
-    @heckler = TestHeckler.new("Heckled", "self.is_a_klass_method?")
-  end
-
-  def teardown
-    @heckler.reset
+    @name = "self.is_a_klass_method?"
+    @nodes = s(:true)
+    super
   end
 
   def test_default_structure
