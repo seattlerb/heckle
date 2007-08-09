@@ -231,7 +231,7 @@ class Heckle < SexpProcessor
       mutate_node out
     else
       increment_node_count out
-        increment_mutation_count out if should_heckle? out
+      increment_mutation_count out if should_heckle? out
       out
     end
   end

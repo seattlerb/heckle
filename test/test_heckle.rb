@@ -289,6 +289,11 @@ class TestHeckleStrings < LiteralHeckleTestCase
 end
 
 class TestHeckleIf < HeckleTestCase
+  def setup
+    @nodes = s(:if)
+    super
+  end
+
   def test_default_structure
     expected = s(:defn, :uses_if,
                  s(:args),
@@ -367,6 +372,11 @@ class TestHeckleBoolean < HeckleTestCase
 end
 
 class TestHeckleWhile < HeckleTestCase
+  def setup
+    @nodes = s(:while)
+    super
+  end
+
   def test_default_structure
     expected = s(:defn, :uses_while,
                  s(:args),
@@ -390,6 +400,11 @@ class TestHeckleWhile < HeckleTestCase
 end
 
 class TestHeckleUntil < HeckleTestCase
+  def setup
+    @nodes = s(:until)
+    super
+  end
+
   def test_default_structure
     expected = s(:defn, :uses_until,
                  s(:args),
@@ -421,7 +436,11 @@ class TestHeckleCall < HeckleTestCase
                    s(:block,
                      s(:nil))))
 
-    @heckler.process(@heckler.current_tree)
+    @heckler.process(@heckler.current_tree) # some_func
+    @heckler.reset_tree
+    @heckler.process(@heckler.current_tree) # some_other_func
+    @heckler.reset_tree
+    @heckler.process(@heckler.current_tree) # +
     assert_equal expected, @heckler.current_tree
   end
 
@@ -447,17 +466,31 @@ class TestHeckleCallblock < HeckleTestCase
     super
   end
 
+  def test_default_structure
+    expected = s(:defn, :uses_callblock,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:iter,
+                       s(:call, s(:call, nil, :x, s(:arglist)), :y, s(:arglist)),
+                       nil,
+                       s(:lit, 1)))))
+
+    assert_equal :foo, @heckler.current_tree
+  end
   def test_callblock_deleted
     expected = s(:defn, :uses_callblock,
                  s(:args),
                  s(:scope,
                    s(:block,
-                     s(:iter, s(:call, s(:call, nil, :x, s(:arglist)), :y), nil, s(:lit, 1)))))
+                     s(:iter,
+                       s(:call, s(:call, nil, :x, s(:arglist)), :y),
+                       nil,
+                       s(:lit, 1)))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
-
 end
 
 class TestHeckleClassMethod < Test::Unit::TestCase
