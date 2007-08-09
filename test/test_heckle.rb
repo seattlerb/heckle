@@ -40,7 +40,7 @@ end
 
 class LiteralHeckleTestCase < HeckleTestCase
   def setup
-    @nodes = [:lit, :str]
+    @nodes = s(:lit, :str)
     super
   end
 
@@ -72,26 +72,25 @@ end
 
 class TestHeckle < HeckleTestCase
   def test_should_set_original_tree
-    expected = [:defn, :uses_many_things,
-                [:fbody,
-                 [:scope,
-                  [:block,
-                   [:args],
-                   [:lasgn, :i, [:lit, 1]],
-                   [:while,
-                    [:call, [:lvar, :i], :<, [:array, [:lit, 10]]],
-                    [:block,
-                     [:lasgn, :i, [:call, [:lvar, :i], :+, [:array, [:lit, 1]]]],
-                     [:until, [:vcall, :some_func],
-                      [:vcall, :some_other_func], true],
-                     [:if,
-                      [:call, [:str, "hi there"], :==,
-                       [:array, [:str, "changeling"]]],
-                      [:return, [:true]],
-                      nil],
-                     [:return, [:false]]],
-                    true],
-                   [:lvar, :i]]]]]
+    expected = s(:defn, :uses_many_things,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:lasgn, :i, s(:lit, 1)),
+                     s(:while,
+                       s(:call, s(:lvar, :i), :<, s(:array, s(:lit, 10))),
+                       s(:block,
+                         s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:array, s(:lit, 1)))),
+                         s(:until, s(:call, nil, :some_func, s(:arglist)),
+                           s(:call, nil, :some_other_func, s(:arglist)), true),
+                         s(:if,
+                           s(:call, s(:str, "hi there"), :==,
+                             s(:array, s(:str, "changeling"))),
+                           s(:return, s(:true)),
+                           nil),
+                         s(:return, s(:false))),
+                       true),
+                     s(:lvar, :i))))
 
     assert_equal expected, @heckler.original_tree
   end
@@ -99,46 +98,51 @@ class TestHeckle < HeckleTestCase
   def test_should_grab_mutatees_from_method
     # expected is from tree of uses_while
     expected = {
-      :call => [[:call, [:lvar, :i], :<, [:array, [:lit, 10]]],
-                [:call, [:lvar, :i], :+, [:array, [:lit, 1]]],
-                [:call, [:str, "hi there"], :==,
-                        [:array, [:str, "changeling"]]]],
-      :cvasgn => [], # no cvasgns here
-      :dasgn => [], # no dasgns here
+      :call => [s(:call, s(:lvar, :i), :<, s(:array, s(:lit, 10))),
+                s(:call, s(:lvar, :i), :+, s(:array, s(:lit, 1))),
+                s(:call, nil, :some_func, s(:arglist)), # FIX: why added?
+                s(:call, nil, :some_other_func, s(:arglist)), # FIX: why added?
+                s(:call, s(:str, "hi there"), :==,
+                  s(:array, s(:str, "changeling")))],
+      :cvasgn => [],     # no cvasgns here
+      :dasgn => [],      # no dasgns here
       :dasgn_curr => [], # no dasgn_currs here
-      :iasgn => [], # no iasgns here
-      :gasgn => [], # no gasgns here
-      :lasgn => [[:lasgn, :i, [:lit, 1]],
-                 [:lasgn, :i, [:call, [:lvar, :i], :+, [:array, [:lit, 1]]]]],
-      :lit => [[:lit, 1], [:lit, 10], [:lit, 1]],
-      :if => [[:if,
-               [:call, [:str, "hi there"], :==, [:array, [:str, "changeling"]]],
-               [:return, [:true]],
-               nil]],
-      :str => [[:str, "hi there"], [:str, "changeling"]],
-      :true => [[:true]],
-      :false => [[:false]],
-      :while => [[:while,
-                  [:call, [:lvar, :i], :<, [:array, [:lit, 10]]],
-                  [:block,
-                   [:lasgn, :i, [:call, [:lvar, :i], :+, [:array, [:lit, 1]]]],
-                   [:until, [:vcall, :some_func],
-                    [:vcall, :some_other_func], true],
-                   [:if,
-                    [:call, [:str, "hi there"], :==,
-                     [:array, [:str, "changeling"]]],
-                    [:return, [:true]],
-                    nil],
-                   [:return, [:false]]],
-                  true]],
-      :until => [[:until, [:vcall, :some_func], [:vcall, :some_other_func], true]]
+      :iasgn => [],      # no iasgns here
+      :gasgn => [],      # no gasgns here
+      :lasgn => [s(:lasgn, :i, s(:lit, 1)),
+                 s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:array, s(:lit, 1))))],
+      :lit => [s(:lit, 1), s(:lit, 10), s(:lit, 1)],
+      :if => [s(:if,
+                s(:call, s(:str, "hi there"), :==, s(:array, s(:str, "changeling"))),
+                s(:return, s(:true)),
+                nil)],
+      :str => [s(:str, "hi there"), s(:str, "changeling")],
+      :true => [s(:true)],
+      :false => [s(:false)],
+      :while => [s(:while,
+                   s(:call, s(:lvar, :i), :<, s(:array, s(:lit, 10))),
+                   s(:block,
+                     s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:array, s(:lit, 1)))),
+                     s(:until, s(:call, nil, :some_func, s(:arglist)),
+                       s(:call, nil, :some_other_func, s(:arglist)), true),
+                     s(:if,
+                       s(:call, s(:str, "hi there"), :==,
+                         s(:array, s(:str, "changeling"))),
+                       s(:return, s(:true)),
+                       nil),
+                     s(:return, s(:false))),
+                   true)],
+      :until => [s(:until,
+                   s(:call, nil, :some_func, s(:arglist)),
+                   s(:call, nil, :some_other_func, s(:arglist)),
+                   true)],
     }
 
     assert_equal expected, @heckler.mutatees
   end
 
   def test_should_count_mutatees_left
-    assert_equal 15, @heckler.mutations_left
+    assert_equal 17, @heckler.mutations_left # FIX WHY?!?
   end
 
   def test_reset
@@ -151,7 +155,7 @@ class TestHeckle < HeckleTestCase
     assert_not_equal original_mutatees, @heckler.mutatees
 
     @heckler.reset
-    assert_equal original_tree[2], @heckler.current_tree[2][1]
+    assert_equal original_tree[2], @heckler.current_tree[2]
     assert_equal original_mutatees, @heckler.mutatees
   end
 
@@ -203,14 +207,14 @@ class TestHeckleNumericLiterals < HeckleTestCase
   end
 
   def util_expected(n)
-    [:defn, :uses_numeric_literals,
-     [:scope,
-      [:block,
-       [:args],
-       [:lasgn, :i, [:lit, toggle(1, 1 == n)]],
-       [:lasgn, :i, [:call, [:lvar, :i], :+,
-                     [:array, [:lit, toggle(2147483648, 2 == n)]]]],
-       [:lasgn, :i, [:call, [:lvar, :i], :-, [:array, [:lit, toggle(3.5, 3 == n)]]]]]]]
+    s(:defn, :uses_numeric_literals,
+      s(:args),
+      s(:scope,
+        s(:block,
+          s(:lasgn, :i, s(:lit, toggle(1, 1 == n))),
+          s(:lasgn, :i, s(:call, s(:lvar, :i), :+,
+                          s(:array, s(:lit, toggle(2147483648, 2 == n))))),
+          s(:lasgn, :i, s(:call, s(:lvar, :i), :-, s(:array, s(:lit, toggle(3.5, 3 == n))))))))
   end
 end
 
@@ -218,13 +222,13 @@ class TestHeckleSymbols < LiteralHeckleTestCase
   TOGGLE_VALUE = :"l33t h4x0r"
 
   def util_expected(n = nil)
-    [:defn, :uses_symbols,
-     [:scope,
-      [:block,
-       [:args],
-       [:lasgn, :i, [:lit, toggle(:blah, n == 1)]],
-       [:lasgn, :i, [:lit, toggle(:blah, n == 2)]],
-       [:lasgn, :i, [:lit, toggle(:and_blah, n == 3)]]]]]
+    s(:defn, :uses_symbols,
+      s(:args),
+      s(:scope,
+        s(:block,
+          s(:lasgn, :i, s(:lit, toggle(:blah, n == 1))),
+          s(:lasgn, :i, s(:lit, toggle(:blah, n == 2))),
+          s(:lasgn, :i, s(:lit, toggle(:and_blah, n == 3))))))
   end
 end
 
@@ -232,13 +236,13 @@ class TestHeckleRegexes < LiteralHeckleTestCase
   TOGGLE_VALUE = /l33t\ h4x0r/
 
   def util_expected(n = nil)
-    [:defn, :uses_regexes,
-     [:scope,
-      [:block,
-       [:args],
-       [:lasgn, :i, [:lit, toggle(/a.*/, n == 1)]],
-       [:lasgn, :i, [:lit, toggle(/c{2,4}+/, n == 2)]],
-       [:lasgn, :i, [:lit, toggle(/123/, n == 3)]]]]]
+    s(:defn, :uses_regexes,
+      s(:args),
+      s(:scope,
+        s(:block,
+          s(:lasgn, :i, s(:lit, toggle(/a.*/, n == 1))),
+          s(:lasgn, :i, s(:lit, toggle(/c{2,4}+/, n == 2))),
+          s(:lasgn, :i, s(:lit, toggle(/123/, n == 3))))))
   end
 end
 
@@ -246,13 +250,13 @@ class TestHeckleRanges < LiteralHeckleTestCase
   TOGGLE_VALUE = 5..10
 
   def util_expected(n = nil)
-    [:defn, :uses_ranges,
-     [:scope,
-      [:block,
-       [:args],
-       [:lasgn, :i, [:lit, toggle(6..100, n == 1)]],
-       [:lasgn, :i, [:lit, toggle(-1..9, n == 2)]],
-       [:lasgn, :i, [:lit, toggle(1..4, n == 3)]]]]]
+    s(:defn, :uses_ranges,
+      s(:args),
+      s(:scope,
+        s(:block,
+          s(:lasgn, :i, s(:lit, toggle(6..100, n == 1))),
+          s(:lasgn, :i, s(:lit, toggle(-1..9, n == 2))),
+          s(:lasgn, :i, s(:lit, toggle(1..4, n == 3))))))
   end
 end
 
@@ -260,13 +264,13 @@ class TestHeckleSameLiteral < LiteralHeckleTestCase
   TOGGLE_VALUE = 6
 
   def util_expected(n = nil)
-    [:defn, :uses_same_literal,
-     [:scope,
-      [:block,
-       [:args],
-       [:lasgn, :i, [:lit, toggle(1, n == 1)]],
-       [:lasgn, :i, [:lit, toggle(1, n == 2)]],
-       [:lasgn, :i, [:lit, toggle(1, n == 3)]]]]]
+    s(:defn, :uses_same_literal,
+      s(:args),
+      s(:scope,
+        s(:block,
+          s(:lasgn, :i, s(:lit, toggle(1, n == 1))),
+          s(:lasgn, :i, s(:lit, toggle(1, n == 2))),
+          s(:lasgn, :i, s(:lit, toggle(1, n == 3))))))
   end
 end
 
@@ -274,53 +278,53 @@ class TestHeckleStrings < LiteralHeckleTestCase
   TOGGLE_VALUE = "l33t h4x0r"
 
   def util_expected(n = nil)
-    [:defn, :uses_strings,
-     [:scope,
-      [:block,
-       [:args],
-       [:call, [:ivar, :@names], :<<, [:array, [:str, toggle("Hello, Robert", n == 1)]]],
-       [:call, [:ivar, :@names], :<<, [:array, [:str, toggle("Hello, Jeff", n == 2)]]],
-       [:call, [:ivar, :@names], :<<, [:array, [:str, toggle("Hi, Frank", n == 3)]]]]]]
+    s(:defn, :uses_strings,
+      s(:args),
+      s(:scope,
+        s(:block,
+          s(:call, s(:ivar, :@names), :<<, s(:array, s(:str, toggle("Hello, Robert", n == 1)))),
+          s(:call, s(:ivar, :@names), :<<, s(:array, s(:str, toggle("Hello, Jeff", n == 2)))),
+          s(:call, s(:ivar, :@names), :<<, s(:array, s(:str, toggle("Hi, Frank", n == 3)))))))
   end
 end
 
 class TestHeckleIf < HeckleTestCase
   def test_default_structure
-    expected = [:defn, :uses_if,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:if,
-                   [:vcall, :some_func],
-                   [:if, [:vcall, :some_other_func], [:return], nil],
-                   nil]]]]
+    expected = s(:defn, :uses_if,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:if,
+                       s(:call, nil, :some_func, s(:arglist)),
+                       s(:if, s(:call, nil, :some_other_func, s(:arglist)), s(:return), nil),
+                       nil))))
 
     assert_equal expected, @heckler.current_tree
   end
 
   def test_should_flip_if_to_unless
-    expected = [:defn, :uses_if,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:if,
-                   [:vcall, :some_func],
-                   [:if, [:vcall, :some_other_func], nil, [:return]],
-                   nil]]]]
+    expected = s(:defn, :uses_if,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:if,
+                       s(:call, nil, :some_func, s(:arglist)),
+                       s(:if, s(:call, nil, :some_other_func, s(:arglist)), nil, s(:return)),
+                       nil))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
 
     @heckler.reset_tree
 
-    expected = [:defn, :uses_if,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:if,
-                   [:vcall, :some_func],
-                   nil,
-                   [:if, [:vcall, :some_other_func], [:return], nil]]]]]
+    expected = s(:defn, :uses_if,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:if,
+                       s(:call, nil, :some_func, s(:arglist)),
+                       nil,
+                       s(:if, s(:call, nil, :some_other_func, s(:arglist)), s(:return), nil)))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
@@ -330,7 +334,7 @@ end
 class TestHeckleBoolean < HeckleTestCase
 
   def setup
-    @nodes = [:true, :false]
+    @nodes = s(:true, :false)
     super
   end
 
@@ -339,12 +343,12 @@ class TestHeckleBoolean < HeckleTestCase
   end
 
   def util_expected(n = nil)
-    [:defn, :uses_boolean,
-     [:scope,
-      [:block,
-       [:args],
-       [:lasgn, :a, [toggle(true, n == 1)]],
-       [:lasgn, :b, [toggle(false, n == 2)]]]]]
+    s(:defn, :uses_boolean,
+      s(:args),
+      s(:scope,
+        s(:block,
+          s(:lasgn, :a, s(toggle(true, n == 1))),
+          s(:lasgn, :b, s(toggle(false, n == 2))))))
   end
 
   def test_default_structure
@@ -364,22 +368,22 @@ end
 
 class TestHeckleWhile < HeckleTestCase
   def test_default_structure
-    expected = [:defn, :uses_while,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:while, [:vcall, :some_func],
-                   [:vcall, :some_other_func], true]]]]
+    expected = s(:defn, :uses_while,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:while, s(:call, nil, :some_func, s(:arglist)),
+                       s(:call, nil, :some_other_func, s(:arglist)), true))))
     assert_equal expected, @heckler.current_tree
   end
 
   def test_flips_while_to_until
-    expected = [:defn, :uses_while,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:until, [:vcall, :some_func],
-                   [:vcall, :some_other_func], true]]]]
+    expected = s(:defn, :uses_while,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:until, s(:call, nil, :some_func, s(:arglist)),
+                       s(:call, nil, :some_other_func, s(:arglist)), true))))
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
@@ -387,22 +391,22 @@ end
 
 class TestHeckleUntil < HeckleTestCase
   def test_default_structure
-    expected = [:defn, :uses_until,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:until, [:vcall, :some_func],
-                   [:vcall, :some_other_func], true]]]]
+    expected = s(:defn, :uses_until,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:until, s(:call, nil, :some_func, s(:arglist)),
+                       s(:call, nil, :some_other_func, s(:arglist)), true))))
     assert_equal expected, @heckler.current_tree
   end
 
   def test_flips_until_to_while
-    expected = [:defn, :uses_until,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:while, [:vcall, :some_func],
-                   [:vcall, :some_other_func], true]]]]
+    expected = s(:defn, :uses_until,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:while, s(:call, nil, :some_func, s(:arglist)),
+                       s(:call, nil, :some_other_func, s(:arglist)), true))))
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
@@ -411,26 +415,25 @@ end
 class TestHeckleCall < HeckleTestCase
 
   def test_call_deleted
-    expected = [:defn, :uses_call,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:nil]]]]
+    expected = s(:defn, :uses_call,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:nil))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
 
   def test_default_structure
-    expected = [:defn, :uses_call,
-                [:fbody,
-                 [:scope,
-                  [:block,
-                   [:args],
-                   [:call,
-                    [:vcall, :some_func],
-                    :+,
-                    [:array, [:vcall, :some_other_func]]]]]]]
+    expected = s(:defn, :uses_call,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:call,
+                       s(:call, nil, :some_func, s(:arglist)),
+                       :+,
+                       s(:array, s(:call, nil, :some_other_func, s(:arglist)))))))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -440,16 +443,16 @@ end
 class TestHeckleCallblock < HeckleTestCase
 
   def setup
-    @nodes = [:call]
+    @nodes = s(:call)
     super
   end
 
   def test_callblock_deleted
-    expected = [:defn, :uses_callblock,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:iter, [:call, [:vcall, :x], :y], nil, [:lit, 1]]]]]
+    expected = s(:defn, :uses_callblock,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:iter, s(:call, s(:call, nil, :x, s(:arglist)), :y), nil, s(:lit, 1)))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
@@ -461,26 +464,26 @@ class TestHeckleClassMethod < Test::Unit::TestCase
   def setup
     @heckler = TestHeckler.new("Heckled", "self.is_a_klass_method?")
   end
-  
+
   def teardown
     @heckler.reset
   end
-  
+
   def test_default_structure
-    expected = [:defs, [:self], :is_a_klass_method?,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:true]]]]
+    expected = s(:defs, s(:self), :is_a_klass_method?,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:true))))
     assert_equal expected, @heckler.current_tree
   end
-  
+
   def test_heckle_class_methods
-    expected = [:defs, [:self], :is_a_klass_method?,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:false]]]]
+    expected = s(:defs, s(:self), :is_a_klass_method?,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:false))))
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
@@ -489,29 +492,29 @@ end
 class TestHeckleCvasgn < HeckleTestCase
 
   def setup
-    @nodes = [:cvasgn]
+    @nodes = s(:cvasgn)
     super
   end
 
   def test_cvasgn_val
-    expected = [:defn, :uses_cvasgn,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:cvasgn, :@@cvar, [:nil]],
-                  [:cvasgn, :@@cvar, [:nil]]]]]
+    expected = s(:defn, :uses_cvasgn,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:cvasgn, :@@cvar, s(:nil)),
+                     s(:cvasgn, :@@cvar, s(:nil)))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
 
   def test_cvasgn_nil
-    expected = [:defn, :uses_cvasgn,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:cvasgn, :@@cvar, [:lit, 5]],
-                  [:cvasgn, :@@cvar, [:lit, 42]]]]]
+    expected = s(:defn, :uses_cvasgn,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:cvasgn, :@@cvar, s(:lit, 5)),
+                     s(:cvasgn, :@@cvar, s(:lit, 42)))))
 
     @heckler.process(@heckler.current_tree)
     @heckler.reset_tree
@@ -524,43 +527,43 @@ end
 class TestHeckleDasgn < HeckleTestCase
 
   def setup
-    @nodes = [:dasgn]
+    @nodes = s(:dasgn)
     super
   end
 
   def test_dasgn_val
-    expected = [:defn, :uses_dasgn,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:iter,
-                    [:fcall, :loop],
-                    [:dasgn_curr, :dvar],
-                    [:iter,
-                      [:fcall, :loop],
-                      nil,
-                      [:block,
-                        [:dasgn, :dvar, [:nil]],
-                        [:dasgn, :dvar, [:nil]]]]]]]]
+    expected = s(:defn, :uses_dasgn,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:iter,
+                       s(:call, nil, :loop, s(:arglist)),
+                       s(:dasgn_curr, :dvar),
+                       s(:iter,
+                         s(:call, nil, :loop, s(:arglist)),
+                         nil,
+                         s(:block,
+                           s(:dasgn, :dvar, s(:nil)),
+                           s(:dasgn, :dvar, s(:nil))))))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
 
   def test_dasgn_nil
-    expected = [:defn, :uses_dasgn,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:iter,
-                    [:fcall, :loop],
-                    [:dasgn_curr, :dvar],
-                    [:iter,
-                      [:fcall, :loop],
-                      nil,
-                      [:block,
-                        [:dasgn, :dvar, [:lit, 5]],
-                        [:dasgn, :dvar, [:lit, 42]]]]]]]]
+    expected = s(:defn, :uses_dasgn,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:iter,
+                       s(:call, nil, :loop, s(:arglist)),
+                       s(:dasgn_curr, :dvar),
+                       s(:iter,
+                         s(:call, nil, :loop, s(:arglist)),
+                         nil,
+                         s(:block,
+                           s(:dasgn, :dvar, s(:lit, 5)),
+                           s(:dasgn, :dvar, s(:lit, 42))))))))
 
     @heckler.process(@heckler.current_tree)
     @heckler.reset_tree
@@ -573,21 +576,21 @@ end
 class TestHeckleDasgncurr < HeckleTestCase
 
   def setup
-    @nodes = [:dasgn_curr]
+    @nodes = s(:dasgn_curr)
     super
   end
 
   def test_dasgn_curr_val
-    expected = [:defn, :uses_dasgncurr,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:iter,
-                    [:fcall, :loop],
-                    [:dasgn_curr, :dvar],
-                    [:block,
-                      [:dasgn_curr, :dvar, [:nil]],
-                      [:dasgn_curr, :dvar, [:nil]]]]]]]
+    expected = s(:defn, :uses_dasgncurr,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:iter,
+                       s(:call, nil, :loop, s(:arglist)),
+                       s(:dasgn_curr, :dvar),
+                       s(:block,
+                         s(:dasgn_curr, :dvar, s(:nil)),
+                         s(:dasgn_curr, :dvar, s(:nil)))))))
 
     @heckler.process(@heckler.current_tree)
     @heckler.reset_tree
@@ -596,16 +599,16 @@ class TestHeckleDasgncurr < HeckleTestCase
   end
 
   def test_dasgn_curr_nil
-    expected = [:defn, :uses_dasgncurr,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:iter,
-                    [:fcall, :loop],
-                    [:dasgn_curr, :dvar],
-                    [:block,
-                      [:dasgn_curr, :dvar, [:lit, 5]],
-                      [:dasgn_curr, :dvar, [:lit, 42]]]]]]]
+    expected = s(:defn, :uses_dasgncurr,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:iter,
+                       s(:call, nil, :loop, s(:arglist)),
+                       s(:dasgn_curr, :dvar),
+                       s(:block,
+                         s(:dasgn_curr, :dvar, s(:lit, 5)),
+                         s(:dasgn_curr, :dvar, s(:lit, 42)))))))
 
     @heckler.process(@heckler.current_tree)
     @heckler.reset_tree
@@ -620,29 +623,29 @@ end
 class TestHeckleIasgn < HeckleTestCase
 
   def setup
-    @nodes = [:iasgn]
+    @nodes = s(:iasgn)
     super
   end
 
   def test_iasgn_val
-    expected = [:defn, :uses_iasgn,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:iasgn, :@ivar, [:nil]],
-                  [:iasgn, :@ivar, [:nil]]]]]
+    expected = s(:defn, :uses_iasgn,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:iasgn, :@ivar, s(:nil)),
+                     s(:iasgn, :@ivar, s(:nil)))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
 
   def test_iasgn_nil
-    expected = [:defn, :uses_iasgn,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:iasgn, :@ivar, [:lit, 5]],
-                  [:iasgn, :@ivar, [:lit, 42]]]]]
+    expected = s(:defn, :uses_iasgn,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:iasgn, :@ivar, s(:lit, 5)),
+                     s(:iasgn, :@ivar, s(:lit, 42)))))
 
     @heckler.process(@heckler.current_tree)
     @heckler.reset_tree
@@ -655,29 +658,29 @@ end
 class TestHeckleGasgn < HeckleTestCase
 
   def setup
-    @nodes = [:gasgn]
+    @nodes = s(:gasgn)
     super
   end
 
   def test_gasgn_val
-    expected = [:defn, :uses_gasgn,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:gasgn, :$gvar, [:nil]],
-                  [:gasgn, :$gvar, [:nil]]]]]
+    expected = s(:defn, :uses_gasgn,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:gasgn, :$gvar, s(:nil)),
+                     s(:gasgn, :$gvar, s(:nil)))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
 
   def test_gasgn_nil
-    expected = [:defn, :uses_gasgn,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:gasgn, :$gvar, [:lit, 5]],
-                  [:gasgn, :$gvar, [:lit, 42]]]]]
+    expected = s(:defn, :uses_gasgn,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:gasgn, :$gvar, s(:lit, 5)),
+                     s(:gasgn, :$gvar, s(:lit, 42)))))
 
     @heckler.process(@heckler.current_tree)
     @heckler.reset_tree
@@ -690,29 +693,29 @@ end
 class TestHeckleLasgn < HeckleTestCase
 
   def setup
-    @nodes = [:lasgn]
+    @nodes = s(:lasgn)
     super
   end
 
   def test_lasgn_val
-    expected = [:defn, :uses_lasgn,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:lasgn, :lvar, [:nil]],
-                  [:lasgn, :lvar, [:nil]]]]]
+    expected = s(:defn, :uses_lasgn,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:lasgn, :lvar, s(:nil)),
+                     s(:lasgn, :lvar, s(:nil)))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
 
   def test_lasgn_nil
-    expected = [:defn, :uses_lasgn,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:lasgn, :lvar, [:lit, 5]],
-                  [:lasgn, :lvar, [:lit, 42]]]]]
+    expected = s(:defn, :uses_lasgn,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:lasgn, :lvar, s(:lit, 5)),
+                     s(:lasgn, :lvar, s(:lit, 42)))))
 
     @heckler.process(@heckler.current_tree)
     @heckler.reset_tree
@@ -725,21 +728,21 @@ end
 class TestHeckleMasgn < HeckleTestCase
 
   def setup
-    @nodes = [:dasgn, :dasgn_curr, :iasgn, :gasgn, :lasgn]
+    @nodes = s(:dasgn, :dasgn_curr, :iasgn, :gasgn, :lasgn)
     super
   end
 
   def test_masgn
-    expected = [:defn, :uses_masgn,
-                [:scope,
-                 [:block,
-                  [:args],
-                  [:masgn,
-                    [:array,
-                      [:lasgn, :_heckle_dummy],
-                      [:gasgn, :$b],
-                      [:lasgn, :c]],
-                    [:array, [:lit, 5], [:lit, 6], [:lit, 7]]]]]]
+    expected = s(:defn, :uses_masgn,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:masgn,
+                       s(:array,
+                         s(:lasgn, :_heckle_dummy),
+                         s(:gasgn, :$b),
+                         s(:lasgn, :c)),
+                       s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7))))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree

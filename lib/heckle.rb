@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'parse_tree'
+require 'unified_ruby'
 require 'ruby2ruby'
 require 'timeout'
 require 'tempfile'
@@ -14,6 +15,8 @@ end
 # Test Unit Sadism
 
 class Heckle < SexpProcessor
+
+  include UnifiedRuby
 
   ##
   # The version of Heckle you are using.
@@ -110,7 +113,7 @@ class Heckle < SexpProcessor
 
     self.strict = false
     self.auto_shift_type = true
-    self.expected = Array
+    self.expected = Sexp
 
     @mutatees = Hash.new
     @mutation_count = Hash.new
@@ -220,8 +223,7 @@ class Heckle < SexpProcessor
     meth = exp.shift
     args = process(exp.shift)
 
-    out = [:call, recv, meth]
-    out << args if args
+    out = s(:call, recv, meth, args)
 
     stack = caller.map { |s| s[/process_\w+/] }.compact
 
@@ -238,12 +240,12 @@ class Heckle < SexpProcessor
   # Replaces the call node with nil.
 
   def mutate_call(node)
-    [:nil]
+    s(:nil)
   end
 
   def process_defn(exp)
     self.method = exp.shift
-    result = [:defn, method]
+    result = s(:defn, method)
     result << process(exp.shift) until exp.empty?
     heckle(result) if method == method_name
 
@@ -254,12 +256,12 @@ class Heckle < SexpProcessor
   end
 
   def process_defs(exp)
-    defs_klass = exp.shift.first
-    defs_method = exp.shift
+    recv = process exp.shift
+    meth = exp.shift
 
-    self.method = "#{defs_klass}.#{defs_method}".intern
-    
-    result = [:defs, [klass], defs_method]
+    self.method = "#{recv}.#{meth}".intern
+
+    result = s(:defs, recv, meth)
     result << process(exp.shift) until exp.empty?
 
     heckle(result) if method == method_name
@@ -274,15 +276,15 @@ class Heckle < SexpProcessor
   # So process_call works correctly
 
   def process_iter(exp)
-    [:iter, process(exp.shift), process(exp.shift), process(exp.shift)]
+    s(:iter, process(exp.shift), process(exp.shift), process(exp.shift))
   end
 
   def process_asgn(type, exp)
     var = exp.shift
     if exp.empty? then
-      mutate_node [type, var]
+      mutate_node s(type, var)
     else
-      mutate_node [type, var, process(exp.shift)]
+      mutate_node s(type, var, process(exp.shift))
     end
   end
 
@@ -290,12 +292,12 @@ class Heckle < SexpProcessor
     type = node.shift
     var = node.shift
     if node.empty? then
-      [:lasgn, :_heckle_dummy]
+      s(:lasgn, :_heckle_dummy)
     else
       if node.last.first == :nil then
-        [type, var, [:lit, 42]]
+        s(type, var, s(:lit, 42))
       else
-        [type, var, [:nil]]
+        s(type, var, s(:nil))
       end
     end
   end
@@ -361,7 +363,7 @@ class Heckle < SexpProcessor
   alias mutate_lasgn mutate_asgn
 
   def process_lit(exp)
-    mutate_node [:lit, exp.shift]
+    mutate_node s(:lit, exp.shift)
   end
 
   ##
@@ -370,82 +372,82 @@ class Heckle < SexpProcessor
   def mutate_lit(exp)
     case exp[1]
     when Fixnum, Float, Bignum
-      [:lit, exp[1] + rand_number]
+      s(:lit, exp[1] + rand_number)
     when Symbol
-      [:lit, rand_symbol]
+      s(:lit, rand_symbol)
     when Regexp
-      [:lit, Regexp.new(Regexp.escape(rand_string.gsub(/\//, '\\/')))]
+      s(:lit, Regexp.new(Regexp.escape(rand_string.gsub(/\//, '\\/'))))
     when Range
-      [:lit, rand_range]
+      s(:lit, rand_range)
     end
   end
 
   def process_str(exp)
-    mutate_node [:str, exp.shift]
+    mutate_node s(:str, exp.shift)
   end
 
   ##
   # Replaces the value of the :str node with a random value.
 
   def mutate_str(node)
-    [:str, rand_string]
+    s(:str, rand_string)
   end
 
   def process_if(exp)
-    mutate_node [:if, process(exp.shift), process(exp.shift), process(exp.shift)]
+    mutate_node s(:if, process(exp.shift), process(exp.shift), process(exp.shift))
   end
 
   ##
   # Swaps the then and else parts of the :if node.
 
   def mutate_if(node)
-    [:if, node[1], node[3], node[2]]
+    s(:if, node[1], node[3], node[2])
   end
 
   def process_true(exp)
-    mutate_node [:true]
+    mutate_node s(:true)
   end
 
   ##
   # Swaps for a :false node.
 
   def mutate_true(node)
-    [:false]
+    s(:false)
   end
 
   def process_false(exp)
-    mutate_node [:false]
+    mutate_node s(:false)
   end
 
   ##
   # Swaps for a :true node.
 
   def mutate_false(node)
-    [:true]
+    s(:true)
   end
 
   def process_while(exp)
     cond, body, head_controlled = grab_conditional_loop_parts(exp)
-    mutate_node [:while, cond, body, head_controlled]
+    mutate_node s(:while, cond, body, head_controlled)
   end
 
   ##
   # Swaps for a :until node.
 
   def mutate_while(node)
-    [:until, node[1], node[2], node[3]]
+    s(:until, node[1], node[2], node[3])
   end
 
   def process_until(exp)
     cond, body, head_controlled = grab_conditional_loop_parts(exp)
-    mutate_node [:until, cond, body, head_controlled]
+    mutate_node s(:until, cond, body, head_controlled)
   end
 
   ##
   # Swaps for a :while node.
 
   def mutate_until(node)
-    [:while, node[1], node[2], node[3]]
+    s(:while, node[1], node[2], node[3])
   end
 
   def mutate_node(node)
@@ -468,7 +470,7 @@ class Heckle < SexpProcessor
     return if node.is_a? String
     node.each { |child| walk_and_push(child) }
     if @mutatable_nodes.include? node.first
-      @mutatees[node.first.to_sym].push(node)
+      @mutatees[node.first].push(node)
       mutation_count[node] = 0
     end
   end
@@ -478,7 +480,7 @@ class Heckle < SexpProcessor
   end
 
   def current_tree
-    ParseTree.translate(klass_name.to_class, method_name)
+    rewrite Sexp.from_array(ParseTree.translate(klass_name.to_class, method_name))
   end
 
   def reset
@@ -541,6 +543,7 @@ class Heckle < SexpProcessor
     return false unless method == method_name
     mutation_count[exp] = 0 if mutation_count[exp].nil?
     return false if node_count[exp] <= mutation_count[exp]
+
     ( mutatees[exp.first.to_sym] || [] ).include?(exp) && !already_mutated?
   end
 
