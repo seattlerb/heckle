@@ -259,7 +259,7 @@ class Heckle < SexpProcessor
     recv = process exp.shift
     meth = exp.shift
 
-    self.method = "#{recv}.#{meth}".intern
+    self.method = "#{RubyToRuby.new.process(recv.deep_clone)}.#{meth}".intern
 
     result = s(:defs, recv, meth)
     result << process(exp.shift) until exp.empty?
