@@ -25,7 +25,7 @@ class TestUnitHeckler < Heckle
   end
 
   def self.validate(klass_name, method_name = nil,
-                    nodes = Heckle::MUTATABLE_NODES)
+                    nodes = Heckle::MUTATABLE_NODES, force = false)
     load_test_files
     klass = klass_name.to_class
 
@@ -41,7 +41,11 @@ class TestUnitHeckler < Heckle
 
     initial_time = Time.now
 
-    unless self.new(klass_name).tests_pass? then
+    heckle = self.new(klass_name)
+
+    passed = heckle.tests_pass?
+
+    unless force and not passed then
       abort "Initial run of tests failed... fix and run heckle again"
     end
 
@@ -55,7 +59,11 @@ class TestUnitHeckler < Heckle
 
     self.timeout = adjusted_timeout
 
-    puts "Initial tests pass. Let's rumble."
+    if passed then
+      puts "Initial tests pass. Let's rumble."
+    else
+      puts "Initial tests failed but you forced things. Let's rumble."
+    end
     puts
 
     methods = method_name ? Array(method_name) : klass.instance_methods(false) + klass_methods

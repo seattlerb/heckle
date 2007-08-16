@@ -4,25 +4,31 @@ $:.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
 require 'test_unit_heckler'
 require 'optparse'
 
+force = false
 nodes = Heckle::MUTATABLE_NODES
 
 opts = OptionParser.new do |opts|
   opts.banner = "Usage: #{File.basename($0)} class_name [method_name]"
-  opts.on( "-v", "--verbose", "Loudly explain heckle run" ) do |opt|
+  opts.on("-v", "--verbose", "Loudly explain heckle run") do |opt|
     TestUnitHeckler.debug = true
   end
 
-  opts.on( "-V", "--version", "Prints Heckle's version number") do |opt|
+  opts.on("-V", "--version", "Prints Heckle's version number") do |opt|
     puts "Heckle #{Heckle::VERSION}"
     exit 0
   end
 
-  opts.on( "-t", "--tests TEST_PATTERN",
-           "Location of tests (glob)" ) do |pattern|
+  opts.on("-t", "--tests TEST_PATTERN",
+          "Location of tests (glob)") do |pattern|
     TestUnitHeckler.test_pattern = pattern
   end
 
-  opts.on(       "--assignments", "Only mutate assignments" ) do |opt|
+  opts.on("-F", "--force", "Ignore initial test failures",
+          "Best used with --focus") do |opt|
+    force = true
+  end
+
+  opts.on(      "--assignments", "Only mutate assignments") do |opt|
     puts "!"*70
     puts "!!! Heckling assignments only"
     puts "!"*70
@@ -31,7 +37,7 @@ opts = OptionParser.new do |opts|
     nodes = Heckle::ASGN_NODES
   end
 
-  opts.on( "-b", "--branches", "Only mutate branches" ) do |opt|
+  opts.on("-b", "--branches", "Only mutate branches") do |opt|
     puts "!"*70
     puts "!!! Heckling branches only"
     puts "!"*70
@@ -40,7 +46,7 @@ opts = OptionParser.new do |opts|
     nodes = Heckle::BRANCH_NODES
   end
 
-  opts.on( "-f", "--focus", "Apply the eye of sauron" ) do |opt|
+  opts.on("-f", "--focus", "Apply the eye of sauron") do |opt|
     puts "!"*70
     puts "!!! Running in focused mode. FEEL THE EYE OF SAURON!!!"
     puts "!"*70
@@ -49,25 +55,25 @@ opts = OptionParser.new do |opts|
     TestUnitHeckler.focus = true
   end
 
-  opts.on( "-T", "--timeout SECONDS", "The maximum time for a test run in seconds",
+  opts.on("-T", "--timeout SECONDS", "The maximum time for a test run in seconds",
                                      "Used to catch infinite loops") do |timeout|
     Heckle.timeout = timeout.to_i
     puts "Setting timeout at #{timeout} seconds."
   end
 
-  opts.on( "-n", "--nodes NODES", "Nodes to mutate",
-                                  "Possible values: #{Heckle::MUTATABLE_NODES.join(',')}" ) do |opt|
+  opts.on("-n", "--nodes NODES", "Nodes to mutate",
+          "Possible values: #{Heckle::MUTATABLE_NODES.join(',')}") do |opt|
     nodes = opt.split(',').collect {|n| n.to_sym }
     puts "Mutating nodes: #{nodes.inspect}"
   end
 
-  opts.on( "-x", "--exclude-nodes NODES", "Nodes to exclude") do |opt|
+  opts.on("-x", "--exclude-nodes NODES", "Nodes to exclude") do |opt|
     exclusions = opt.split(',').collect {|n| n.to_sym }
     nodes = nodes - exclusions
     puts "Mutating without nodes: #{exclusions.inspect}"
   end
 
-  opts.on( "-h", "--help", "Show this message") do |opt|
+  opts.on("-h", "--help", "Show this message") do |opt|
     puts opts
     exit 0
   end
@@ -86,4 +92,5 @@ unless impl then
   exit 1
 end
 
-exit TestUnitHeckler.validate(impl, meth, nodes)
+exit TestUnitHeckler.validate(impl, meth, nodes, force)
+
