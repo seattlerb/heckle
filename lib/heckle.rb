@@ -16,6 +16,8 @@ end
 
 class Heckle < SexpProcessor
 
+  class Timeout < Timeout::Error; end
+
   include UnifiedRuby
 
   ##
@@ -170,11 +172,14 @@ class Heckle < SexpProcessor
       reset_tree
       begin
         process current_tree
-        timeout(@@timeout) { run_tests }
+        timeout(@@timeout, Heckle::Timeout) { run_tests }
       rescue SyntaxError => e
         @reporter.warning "Mutation caused a syntax error:\n\n#{e.message}}"
-      rescue Timeout::Error
+      rescue Heckle::Timeout
         @reporter.warning "Your tests timed out. Heckle may have caused an infinite loop."
+      rescue Interrupt
+        @reporter.warning 'Mutation canceled, hit ^C again to exit'
+        sleep 2
       end
 
       left = mutations_left

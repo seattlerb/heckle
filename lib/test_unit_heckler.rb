@@ -1,12 +1,17 @@
 #!/usr/bin/env ruby
 
 require 'test/unit/autorunner'
+require 'test/unit/testcase'
 require 'heckle'
 require 'zentest_mapping'
 
 $: << 'lib' << 'test'
 
+# Make sure test/unit doesn't swallow our timeout
+Test::Unit::TestCase::PASSTHROUGH_EXCEPTIONS << Heckle::Timeout
+
 class TestUnitHeckler < Heckle
+
   @@test_pattern = 'test/test_*.rb'
   @@tests_loaded = false
   @@focus = false
@@ -49,15 +54,13 @@ class TestUnitHeckler < Heckle
       abort "Initial run of tests failed... fix and run heckle again"
     end
 
-    if self.guess_timeout?
-      running_time = (Time.now - initial_time)
-      adjusted_timeout = (running_time * 2 < 5) ? 5 : (running_time * 2)
+    if self.guess_timeout? then
+      running_time = Time.now - initial_time
+      adjusted_timeout = (running_time * 2 < 5) ? 5 : (running_time * 2).ceil
       self.timeout = adjusted_timeout
-      puts "Setting timeout at #{adjusted_timeout} seconds." if @@debug
-
     end
 
-    self.timeout = adjusted_timeout
+    puts "Timeout set to #{adjusted_timeout} seconds."
 
     if passed then
       puts "Initial tests pass. Let's rumble."
