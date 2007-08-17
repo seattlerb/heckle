@@ -122,8 +122,8 @@ class Heckle < SexpProcessor
     self.expected = Sexp
 
     @mutatees = Hash.new
-    @mutation_count = Hash.new
-    @node_count = Hash.new
+    @mutation_count = Hash.new 0
+    @node_count = Hash.new 0
     @count = 0
 
     @mutatable_nodes = nodes
@@ -236,13 +236,7 @@ class Heckle < SexpProcessor
     meth = exp.shift
     args = process(exp.shift)
 
-    call = s(:call, recv, meth, args)
-
-    if context[1] != :iter then
-      mutate_node call
-    else
-      call
-    end
+    mutate_node s(:call, recv, meth, args)
   end
 
   ##
@@ -261,7 +255,7 @@ class Heckle < SexpProcessor
     return result
   ensure
     @mutated = false
-    reset_node_count
+    node_count.clear
   end
 
   def process_defs(exp)
@@ -278,29 +272,18 @@ class Heckle < SexpProcessor
     return result
   ensure
     @mutated = false
-    reset_node_count
+    node_count.clear
   end
 
   ##
   # So process_call works correctly
-  #--
-  # HACK this method is a nasty hack, but can probably only be transformed
-  # into a less-nasty hack by explicitly processing iter.
 
   def process_iter(exp)
     call = process exp.shift
     args = process exp.shift
     body = process exp.shift
 
-    if should_heckle? call then
-      increment_node_count call
-      increment_mutation_count call
-      s(:nil)
-    elsif body.first == :call and should_heckle? body then
-      s(:iter, call, args, mutate_node(body))
-    else
-      s(:iter, call, args, body)
-    end
+    mutate_node s(:iter, call, args, body)
   end
 
   def mutate_iter(exp)
@@ -493,18 +476,28 @@ class Heckle < SexpProcessor
   ############################################################
   ### Tree operations
 
-  def walk_and_push(node)
+  def walk_and_push(node, index = 0)
     return unless node.respond_to? :each
     return if node.is_a? String
-    node.each { |child| walk_and_push(child) }
-    if @mutatable_nodes.include? node.first
+
+    @walk_stack.push node.first
+    node.each_with_index { |child_node, i| walk_and_push child_node, i }
+    @walk_stack.pop
+
+    if @mutatable_nodes.include? node.first and
+       # HACK skip over call nodes that are the first child of an iter or
+       # they'll get added twice
+       #
+       # I think heckle really needs two processors, one for finding and one
+       # for heckling.
+       !(node.first == :call and index == 1 and @walk_stack.last == :iter) then
       @mutatees[node.first].push(node)
-      mutation_count[node] = 0
     end
   end
 
   def grab_mutatees
-    walk_and_push(current_tree)
+    @walk_stack = []
+    walk_and_push current_tree
   end
 
   def current_tree
@@ -514,7 +507,7 @@ class Heckle < SexpProcessor
   def reset
     reset_tree
     reset_mutatees
-    reset_mutation_count
+    mutation_count.clear
   end
 
   def reset_tree
@@ -537,27 +530,15 @@ class Heckle < SexpProcessor
     @mutatees = @original_mutatees.deep_clone
   end
 
-  def reset_mutation_count
-    mutation_count.each {|k,v| mutation_count[k] = 0}
-  end
-
-  def reset_node_count
-    node_count.each {|k,v| node_count[k] = 0}
-  end
-
   def increment_node_count(node)
-    if node_count[node].nil?
-      node_count[node] = 1
-    else
-      node_count[node] += 1
-    end
+    node_count[node] += 1
   end
 
   def increment_mutation_count(node)
     # So we don't re-mutate this later if the tree is reset
     mutation_count[node] += 1
     mutatee_type = @mutatees[node.first]
-    deleted = mutatee_type.delete_at mutatee_type.index(node)
+    mutatee_type.delete_at mutatee_type.index(node)
     @mutated = true
   end
 
@@ -570,10 +551,9 @@ class Heckle < SexpProcessor
 
   def should_heckle?(exp)
     return false unless method == method_name
-    mutation_count[exp] = 0 if mutation_count[exp].nil?
     return false if node_count[exp] <= mutation_count[exp]
 
-    ( mutatees[exp.first.to_sym] || [] ).include?(exp) && !already_mutated?
+    mutatees[exp.first.to_sym].include?(exp) && !already_mutated?
   end
 
   def grab_conditional_loop_parts(exp)
@@ -756,7 +736,7 @@ class Heckle < SexpProcessor
 
   MUTATABLE_NODES = instance_methods.grep(/mutate_/).sort.map do |meth|
     meth.sub(/mutate_/, '').intern
-  end - [:asgn, :node, :iter] # Ignore these methods
+  end - [:asgn, :node] # Ignore these methods
 
   ##
   # All assignment nodes that can be mutated by Heckle..
