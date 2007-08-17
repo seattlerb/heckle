@@ -233,9 +233,7 @@ class Heckle < SexpProcessor
 
     call = s(:call, recv, meth, args)
 
-    stack = caller.map { |s| s[/process_\w+/] }.compact
-
-    if stack.first != "process_iter" then
+    if context[1] != :iter then
       mutate_node call
     else
       call
@@ -592,13 +590,18 @@ class Heckle < SexpProcessor
 
     if sum == @last_mutations_left then
       puts 'bug!'
+      puts
       require 'pp'
-      puts 'mutatees left:'
+      puts 'mutatees:'
       pp @mutatees
       puts
       puts 'original tree:'
       pp @original_tree
-      abort 'Infinite loop detected'
+      puts
+      puts "Infinite loop detected!"
+      puts "Please save this output to an attachment and submit a ticket here:"
+      puts "http://rubyforge.org/tracker/?func=add&group_id=1513&atid=5921"
+      exit 1
     else
       @last_mutations_left = sum
     end
