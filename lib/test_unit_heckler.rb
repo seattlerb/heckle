@@ -50,7 +50,7 @@ class TestUnitHeckler < Heckle
 
     passed = heckle.tests_pass?
 
-    unless force and not passed then
+    unless force or passed then
       abort "Initial run of tests failed... fix and run heckle again"
     end
 

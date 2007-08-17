@@ -638,26 +638,30 @@ class Heckle < SexpProcessor
   # Suppresses output on $stdout and $stderr.
 
   def silence_stream
-    dead = File.open("/dev/null", "w")
+    return yield if @@debug
 
-    $stdout.flush
-    $stderr.flush
+    begin
+      dead = File.open("/dev/null", "w")
 
-    oldstdout = $stdout.dup
-    oldstderr = $stderr.dup
+      $stdout.flush
+      $stderr.flush
 
-    $stdout.reopen(dead)
-    $stderr.reopen(dead)
+      oldstdout = $stdout.dup
+      oldstderr = $stderr.dup
 
-    result = yield
+      $stdout.reopen(dead)
+      $stderr.reopen(dead)
 
-  ensure
-    $stdout.flush
-    $stderr.flush
+      result = yield
 
-    $stdout.reopen(oldstdout)
-    $stderr.reopen(oldstderr)
-    result
+    ensure
+      $stdout.flush
+      $stderr.flush
+
+      $stdout.reopen(oldstdout)
+      $stderr.reopen(oldstderr)
+      result
+    end
   end
 
   class Reporter
