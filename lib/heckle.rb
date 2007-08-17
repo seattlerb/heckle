@@ -82,6 +82,10 @@ class Heckle < SexpProcessor
   @@guess_timeout = true
   @@timeout = 60 # default to something longer (can be overridden by runners)
 
+  def self.debug
+    @@debug
+  end
+
   def self.debug=(value)
     @@debug = value
   end
@@ -152,24 +156,28 @@ class Heckle < SexpProcessor
   ### Running the script
 
   def validate
-    if mutations_left == 0
+    left = mutations_left
+
+    if left == 0 then
       @reporter.no_mutations(method_name)
       return
     end
 
-    @reporter.method_loaded(klass_name, method_name, mutations_left)
+    @reporter.method_loaded(klass_name, method_name, left)
 
-    until mutations_left == 0
-      @reporter.remaining_mutations(mutations_left)
+    until left == 0 do
+      @reporter.remaining_mutations left
       reset_tree
       begin
         process current_tree
-        silence_stream { timeout(@@timeout) { run_tests } }
+        timeout(@@timeout) { run_tests }
       rescue SyntaxError => e
         @reporter.warning "Mutation caused a syntax error:\n\n#{e.message}}"
       rescue Timeout::Error
         @reporter.warning "Your tests timed out. Heckle may have caused an infinite loop."
       end
+
+      left = mutations_left
     end
 
     reset # in case we're validating again. we should clean up.
@@ -223,16 +231,14 @@ class Heckle < SexpProcessor
     meth = exp.shift
     args = process(exp.shift)
 
-    out = s(:call, recv, meth, args)
+    call = s(:call, recv, meth, args)
 
     stack = caller.map { |s| s[/process_\w+/] }.compact
 
     if stack.first != "process_iter" then
-      mutate_node out
+      mutate_node call
     else
-      increment_node_count out
-      increment_mutation_count out if should_heckle? out
-      out
+      call
     end
   end
 
@@ -274,9 +280,28 @@ class Heckle < SexpProcessor
 
   ##
   # So process_call works correctly
+  #--
+  # HACK this method is a nasty hack, but can probably only be transformed
+  # into a less-nasty hack by explicitly processing iter.
 
   def process_iter(exp)
-    s(:iter, process(exp.shift), process(exp.shift), process(exp.shift))
+    call = process exp.shift
+    args = process exp.shift
+    body = process exp.shift
+
+    if should_heckle? call then
+      increment_node_count call
+      increment_mutation_count call
+      s(:nil)
+    elsif body.first == :call and should_heckle? body then
+      s(:iter, call, args, mutate_node(body))
+    else
+      s(:iter, call, args, body)
+    end
+  end
+
+  def mutate_iter(exp)
+    s(:nil)
   end
 
   def process_asgn(type, exp)
@@ -292,7 +317,7 @@ class Heckle < SexpProcessor
     type = node.shift
     var = node.shift
     if node.empty? then
-      s(:lasgn, :_heckle_dummy)
+      s(type, :_heckle_dummy)
     else
       if node.last.first == :nil then
         s(type, var, s(:lit, 42))
@@ -528,7 +553,8 @@ class Heckle < SexpProcessor
   def increment_mutation_count(node)
     # So we don't re-mutate this later if the tree is reset
     mutation_count[node] += 1
-    @mutatees[node.first].delete_at(@mutatees[node.first].index(node))
+    mutatee_type = @mutatees[node.first]
+    deleted = mutatee_type.delete_at mutatee_type.index(node)
     @mutated = true
   end
 
@@ -559,8 +585,24 @@ class Heckle < SexpProcessor
   end
 
   def mutations_left
+    @last_mutations_left ||= -1
+
     sum = 0
-    @mutatees.each {|mut| sum += mut.last.size }
+    @mutatees.each { |mut| sum += mut.last.size }
+
+    if sum == @last_mutations_left then
+      puts 'bug!'
+      require 'pp'
+      puts 'mutatees left:'
+      pp @mutatees
+      puts
+      puts 'original tree:'
+      pp @original_tree
+      abort 'Infinite loop detected'
+    else
+      @last_mutations_left = sum
+    end
+
     sum
   end
 
@@ -697,7 +739,7 @@ class Heckle < SexpProcessor
     end
 
     def report_test_failures
-      puts "Tests failed -- this is good"
+      puts "Tests failed -- this is good" if Heckle.debug
     end
   end
 
@@ -706,7 +748,7 @@ class Heckle < SexpProcessor
 
   MUTATABLE_NODES = instance_methods.grep(/mutate_/).sort.map do |meth|
     meth.sub(/mutate_/, '').intern
-  end - [:asgn, :node] # Ignore these methods
+  end - [:asgn, :node, :iter] # Ignore these methods
 
   ##
   # All assignment nodes that can be mutated by Heckle..
