@@ -4,6 +4,10 @@ $: << 'lib'
 
 require 'rubygems'
 require 'hoe'
+
+deps = %w(ParseTree RubyInline ruby2ruby ZenTest)
+$:.push(*deps.map { |p| "../../#{p}/dev/lib" })
+
 require './lib/heckle.rb'
 
 Hoe.new('heckle', Heckle::VERSION) do |p|
@@ -18,5 +22,7 @@ Hoe.new('heckle', Heckle::VERSION) do |p|
   p.extra_deps << ['ruby2ruby', '>= 1.1.6']
   p.extra_deps << ['ZenTest', '>= 3.5.2']
 end
+
+Hoe::RUBY_FLAGS.sub! /-I/, "-I#{deps.map { |p| "../../#{p}/dev/lib" }.join(":")}:"
 
 # vim: syntax=Ruby

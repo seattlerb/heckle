@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'parse_tree'
+require 'sexp_processor'
 require 'unified_ruby'
 require 'ruby2ruby'
 require 'timeout'
