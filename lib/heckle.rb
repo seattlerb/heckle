@@ -553,8 +553,9 @@ class Heckle < SexpProcessor
   def should_heckle?(exp)
     return false unless method == method_name
     return false if node_count[exp] <= mutation_count[exp]
+    key = exp.first.to_sym
 
-    mutatees[exp.first.to_sym].include?(exp) && !already_mutated?
+    mutatees.include?(key) && mutatees[key].include?(exp) && !already_mutated?
   end
 
   def grab_conditional_loop_parts(exp)
