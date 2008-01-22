@@ -786,3 +786,43 @@ class TestHeckleMasgn < HeckleTestCase
 
 end
 
+class TestHeckleIter < HeckleTestCase
+  def setup
+    @nodes = [ :call, :lasgn ]
+    super
+  end
+  
+  def test_iter
+    expected = s(:defn, :uses_iter,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:lasgn, :x, s(:nil)),
+                     s(:iter,
+                       s(:call, s(:lvar, :x), :each, s(:arglist)),
+                       s(:dasgn_curr, :y),
+                       s(:dvar, :y)))))
+    
+    # This call causes the replacement of [:lasgn, :x...] above to
+    # become [:lasgn, :nil].  We then reset the tree to ensure that
+    # the original method is maintained.  We are really trying to test
+    # the reset_tree method here, not the actual changes.
+
+    @heckler.process(@heckler.current_tree)
+    assert_equal(expected, @heckler.current_tree)
+
+    @heckler.reset_tree
+    expected = s(:defn, :uses_iter,
+                 s(:args),
+                 s(:scope,
+                   s(:block,
+                     s(:lasgn, :x, s(:array, s(:lit, 1), s(:lit, 2), s(:lit, 3))),
+                     s(:iter,
+                       s(:call, s(:lvar, :x), :each, s(:arglist)),
+                       s(:dasgn_curr, :y),
+                       s(:dvar, :y)))))
+
+    @heckler.process(@heckler.current_tree)
+    assert_equal(expected, @heckler.current_tree)
+  end
+end

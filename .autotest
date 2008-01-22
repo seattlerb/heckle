@@ -1,0 +1,5 @@
+# -*- ruby -*-
+
+Autotest.add_hook :initialize do |at|
+  at.extra_class_map["TestHeckleIter"] = "test/test_heckle.rb"
+end
