@@ -8,7 +8,11 @@ require 'zentest_mapping'
 $: << 'lib' << 'test'
 
 # Make sure test/unit doesn't swallow our timeout
-Test::Unit::TestCase::PASSTHROUGH_EXCEPTIONS << Heckle::Timeout
+begin
+  Test::Unit::TestCase::PASSTHROUGH_EXCEPTIONS << Heckle::Timeout
+rescue NameError
+  # ignore
+end
 
 class TestUnitHeckler < Heckle
 

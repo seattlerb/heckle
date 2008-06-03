@@ -38,7 +38,7 @@ class HeckleTestCase < Test::Unit::TestCase
   end
 
   def teardown
-    @heckler.reset
+    @heckler.reset if defined? @heckler
   end
 end
 

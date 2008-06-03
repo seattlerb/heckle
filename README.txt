@@ -1,10 +1,11 @@
-heckle
-    http://www.rubyforge.org/projects/seattlerb
-    by Ryan Davis and Kevin Clark
+= heckle
+
+* http://www.rubyforge.org/projects/seattlerb
+* http://seattlerb.rubyforge.org/heckle
 
 == DESCRIPTION:
 
-Heckle is a mutation tester. It modifies your code and runs your tests to make sure they fail. The idea is that if code can be changed and your tests don't notice, either that code isn't being covered or it doesn't do anything.
+Heckle is unit test sadism(tm) at it's core. Heckle is a mutation tester. It modifies your code and runs your tests to make sure they fail. The idea is that if code can be changed and your tests don't notice, either that code isn't being covered or it doesn't do anything.
 
 It's like hiring a white-hat hacker to try to break into your server and making sure you detect it. You learn the most by trying to break things and watching the outcome in an act of unit test sadism.
 
@@ -20,18 +21,18 @@ It's like hiring a white-hat hacker to try to break into your server and making 
 
 == REQUIREMENTS:
 
-+ ruby2ruby 1.1.2 or greater
-+ ParseTree 1.6.1 or greater
+* ruby2ruby 1.1.2 or greater
+* ParseTree 1.6.1 or greater
 
 == INSTALL:
 
-+ sudo gem install heckle
+* sudo gem install heckle
 
 == LICENSE:
 
 (The MIT License)
 
-Copyright (c) 2006 Ryan Davis and Kevin Clark
+Copyright (c) 2006-2008 Ryan Davis and Kevin Clark
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
