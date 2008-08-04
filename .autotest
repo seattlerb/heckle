@@ -1,5 +1,7 @@
 # -*- ruby -*-
 
 Autotest.add_hook :initialize do |at|
-  at.extra_class_map["TestHeckleIter"] = "test/test_heckle.rb"
+  %w(TestHeckleDasgn TestHeckleIter TestHeckleDasgncurr).each do |klass|
+    at.extra_class_map[klass] = "test/test_heckle.rb"
+  end
 end

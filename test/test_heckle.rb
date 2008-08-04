@@ -560,102 +560,6 @@ class TestHeckleCvasgn < HeckleTestCase
 
 end
 
-class TestHeckleDasgn < HeckleTestCase
-
-  def setup
-    @nodes = s(:dasgn)
-    super
-  end
-
-  def test_dasgn_val
-    expected = s(:defn, :uses_dasgn,
-                 s(:args),
-                 s(:scope,
-                   s(:block,
-                     s(:iter,
-                       s(:call, nil, :loop, s(:arglist)),
-                       s(:dasgn_curr, :dvar),
-                       s(:iter,
-                         s(:call, nil, :loop, s(:arglist)),
-                         nil,
-                         s(:block,
-                           s(:dasgn, :dvar, s(:nil)),
-                           s(:dasgn, :dvar, s(:nil))))))))
-
-    @heckler.process(@heckler.current_tree)
-    assert_equal expected, @heckler.current_tree
-  end
-
-  def test_dasgn_nil
-    expected = s(:defn, :uses_dasgn,
-                 s(:args),
-                 s(:scope,
-                   s(:block,
-                     s(:iter,
-                       s(:call, nil, :loop, s(:arglist)),
-                       s(:dasgn_curr, :dvar),
-                       s(:iter,
-                         s(:call, nil, :loop, s(:arglist)),
-                         nil,
-                         s(:block,
-                           s(:dasgn, :dvar, s(:lit, 5)),
-                           s(:dasgn, :dvar, s(:lit, 42))))))))
-
-    @heckler.process(@heckler.current_tree)
-    @heckler.reset_tree
-    @heckler.process(@heckler.current_tree)
-    assert_equal expected, @heckler.current_tree
-  end
-
-end
-
-class TestHeckleDasgncurr < HeckleTestCase
-
-  def setup
-    @nodes = s(:dasgn_curr)
-    super
-  end
-
-  def test_dasgn_curr_val
-    expected = s(:defn, :uses_dasgncurr,
-                 s(:args),
-                 s(:scope,
-                   s(:block,
-                     s(:iter,
-                       s(:call, nil, :loop, s(:arglist)),
-                       s(:dasgn_curr, :dvar),
-                       s(:block,
-                         s(:dasgn_curr, :dvar, s(:nil)),
-                         s(:dasgn_curr, :dvar, s(:nil)))))))
-
-    @heckler.process(@heckler.current_tree)
-    @heckler.reset_tree
-    @heckler.process(@heckler.current_tree)
-    assert_equal expected, @heckler.current_tree
-  end
-
-  def test_dasgn_curr_nil
-    expected = s(:defn, :uses_dasgncurr,
-                 s(:args),
-                 s(:scope,
-                   s(:block,
-                     s(:iter,
-                       s(:call, nil, :loop, s(:arglist)),
-                       s(:dasgn_curr, :dvar),
-                       s(:block,
-                         s(:dasgn_curr, :dvar, s(:lit, 5)),
-                         s(:dasgn_curr, :dvar, s(:lit, 42)))))))
-
-    @heckler.process(@heckler.current_tree)
-    @heckler.reset_tree
-    @heckler.process(@heckler.current_tree)
-    @heckler.reset_tree
-    @heckler.process(@heckler.current_tree)
-    assert_equal expected, @heckler.current_tree
-  end
-
-end
-
 class TestHeckleIasgn < HeckleTestCase
 
   def setup
@@ -800,8 +704,8 @@ class TestHeckleIter < HeckleTestCase
                      s(:lasgn, :x, s(:nil)),
                      s(:iter,
                        s(:call, s(:lvar, :x), :each, s(:arglist)),
-                       s(:dasgn_curr, :y),
-                       s(:dvar, :y)))))
+                       s(:lasgn, :y),
+                       s(:lvar, :y)))))
     
     # This call causes the replacement of [:lasgn, :x...] above to
     # become [:lasgn, :nil].  We then reset the tree to ensure that
@@ -819,8 +723,8 @@ class TestHeckleIter < HeckleTestCase
                      s(:lasgn, :x, s(:array, s(:lit, 1), s(:lit, 2), s(:lit, 3))),
                      s(:iter,
                        s(:call, s(:lvar, :x), :each, s(:arglist)),
-                       s(:dasgn_curr, :y),
-                       s(:dvar, :y)))))
+                       s(:lasgn, :_heckle_dummy),
+                       s(:call, nil, :y, s(:arglist))))))
 
     @heckler.process(@heckler.current_tree)
     assert_equal(expected, @heckler.current_tree)
