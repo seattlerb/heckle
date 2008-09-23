@@ -1,13 +1,15 @@
 # -*- ruby -*-
 
-$: << 'lib'
+Hoe.add_include_dirs("../../ParseTree/dev/lib",
+                     "../../ParseTree/dev/test",
+                     "../../RubyInline/dev/lib",
+                     "../../ruby2ruby/dev/lib",
+                     "../../ZenTest/dev/lib",
+                     "../../sexp_processor/dev/lib",
+                     "lib")
 
 require 'rubygems'
 require 'hoe'
-
-deps = %w(ParseTree RubyInline ruby2ruby ZenTest)
-$:.push(*deps.map { |p| "../../#{p}/dev/lib" })
-
 require './lib/heckle.rb'
 
 Hoe.new('heckle', Heckle::VERSION) do |heckle|
@@ -23,7 +25,5 @@ Hoe.new('heckle', Heckle::VERSION) do |heckle|
   heckle.extra_deps << ['ruby2ruby', '>= 1.1.6']
   heckle.extra_deps << ['ZenTest', '>= 3.5.2']
 end
-
-Hoe::RUBY_FLAGS.sub! /-I/, "-I#{deps.map { |p| "../../#{p}/dev/lib" }.join(":")}:"
 
 # vim: syntax=Ruby
