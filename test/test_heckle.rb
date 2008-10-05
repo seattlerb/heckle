@@ -25,7 +25,8 @@ class TestHeckler < Heckle
 end
 
 class HeckleTestCase < Test::Unit::TestCase
-  undef_method :default_test
+  undef_method :default_test unless defined? Mini
+
   def setup
     @nodes ||= Heckle::MUTATABLE_NODES
     unless defined? @name then

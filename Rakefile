@@ -1,5 +1,8 @@
 # -*- ruby -*-
 
+require 'rubygems'
+require 'hoe'
+
 Hoe.add_include_dirs("../../ParseTree/dev/lib",
                      "../../ParseTree/dev/test",
                      "../../RubyInline/dev/lib",
@@ -8,8 +11,6 @@ Hoe.add_include_dirs("../../ParseTree/dev/lib",
                      "../../sexp_processor/dev/lib",
                      "lib")
 
-require 'rubygems'
-require 'hoe'
 require './lib/heckle.rb'
 
 Hoe.new('heckle', Heckle::VERSION) do |heckle|
