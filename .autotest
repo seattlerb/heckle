@@ -1,7 +1,16 @@
 # -*- ruby -*-
 
+require 'autotest/restart'
+
 Autotest.add_hook :initialize do |at|
-  %w(TestHeckleDasgn TestHeckleIter TestHeckleDasgncurr).each do |klass|
-    at.extra_class_map[klass] = "test/test_heckle.rb"
+  at.libs << ":../../RubyInline/dev/lib"
+  at.libs << ":../../ParseTree/dev/lib:../../ParseTree/dev/test"
+  at.libs << ":../../sexp_processor/dev/lib"
+  at.libs << ":../../ruby2ruby/dev/lib"
+
+  %w(Dasgn Iter Dasgncurr Cvasgn Boolean Call Callblock
+     ClassMethod Gasgn Iasgn If Lasgn Masgn Ranges Regexes
+     SameLiteral Strings Symbols Until While).each do |klass|
+    at.extra_class_map["TestHeckle#{klass}"] = "test/test_heckle.rb"
   end
 end
