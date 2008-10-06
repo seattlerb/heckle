@@ -32,13 +32,14 @@ class HeckleTestCase < Test::Unit::TestCase
 
   def setup
     @nodes ||= Heckle::MUTATABLE_NODES
-    unless defined? @method_name then
+    unless defined? @hecklee then
       data = self.class.name.sub(/HeckleTestCase/, '').sub(/TestHeckle/, '')
       data = data.gsub(/([A-Z])/, '_\1').downcase
       data = "_many_things" if data.empty?
-      @method_name = "uses#{data}"
+      @hecklee = "uses#{data}"
     end
-    @heckler = TestHeckler.new("Heckled", @method_name, @nodes) rescue nil
+
+    @heckler = TestHeckler.new("Heckled", @hecklee, @nodes) rescue nil
   end
 
   def teardown
@@ -504,7 +505,7 @@ end
 
 class TestHeckleClassMethod < HeckleTestCase
   def setup
-    @method_name = "self.is_a_klass_method?"
+    @hecklee = "self.is_a_klass_method?"
     @nodes = s(:true)
     super
   end
