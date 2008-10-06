@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'parse_tree'
 require 'sexp_processor'
-require 'unified_ruby'
 require 'ruby2ruby'
 require 'timeout'
 require 'tempfile'
@@ -18,8 +17,6 @@ end
 class Heckle < SexpProcessor
 
   class Timeout < Timeout::Error; end
-
-  include UnifiedRuby
 
   ##
   # The version of Heckle you are using.
@@ -502,7 +499,13 @@ class Heckle < SexpProcessor
   end
 
   def current_tree
-    rewrite Sexp.from_array(ParseTree.translate(klass_name.to_class, method_name))
+    ur = Unifier.new
+
+    sexp = ParseTree.translate(klass_name.to_class, method_name)
+    raise "sexp invalid for #{klass_name}##{method_name}" if sexp == [nil]
+    sexp = ur.process(sexp)
+
+    rewrite sexp
   end
 
   def reset

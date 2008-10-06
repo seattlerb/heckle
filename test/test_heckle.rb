@@ -25,21 +25,24 @@ class TestHeckler < Heckle
 end
 
 class HeckleTestCase < Test::Unit::TestCase
-  undef_method :default_test unless defined? Mini
+  unless defined? Mini then
+    undef_method :default_test
+    alias :refute_equal :assert_not_equal
+  end
 
   def setup
     @nodes ||= Heckle::MUTATABLE_NODES
-    unless defined? @name then
-      data = self.class.name["TestHeckle".size..-1]
+    unless defined? @method_name then
+      data = self.class.name.sub(/HeckleTestCase/, '').sub(/TestHeckle/, '')
       data = data.gsub(/([A-Z])/, '_\1').downcase
       data = "_many_things" if data.empty?
-      @name = "uses#{data}"
+      @method_name = "uses#{data}"
     end
-    @heckler = TestHeckler.new("Heckled", @name, @nodes)
+    @heckler = TestHeckler.new("Heckled", @method_name, @nodes) rescue nil
   end
 
   def teardown
-    @heckler.reset if defined? @heckler
+    @heckler.reset if defined?(@heckler) && @heckler
   end
 end
 
@@ -157,8 +160,8 @@ class TestHeckle < HeckleTestCase
 
     3.times { @heckler.process(@heckler.current_tree) }
 
-    assert_not_equal original_tree, @heckler.current_tree
-    assert_not_equal original_mutatees, @heckler.mutatees
+    refute_equal original_tree, @heckler.current_tree
+    refute_equal original_mutatees, @heckler.mutatees
 
     @heckler.reset
     assert_equal original_tree[2], @heckler.current_tree[2]
@@ -169,7 +172,7 @@ class TestHeckle < HeckleTestCase
     original_tree = @heckler.current_tree.deep_clone
 
     @heckler.process(@heckler.current_tree)
-    assert_not_equal original_tree, @heckler.current_tree
+    refute_equal original_tree, @heckler.current_tree
 
     @heckler.reset_tree
     assert_equal original_tree, @heckler.current_tree
@@ -180,16 +183,16 @@ class TestHeckle < HeckleTestCase
     original_mutatees = @heckler.mutatees.deep_clone
 
     @heckler.process(@heckler.current_tree)
-    assert_not_equal original_tree, @heckler.current_tree
-    assert_not_equal original_mutatees, @heckler.mutatees
+    refute_equal original_tree, @heckler.current_tree
+    refute_equal original_mutatees, @heckler.mutatees
 
     @heckler.reset
     assert_equal original_tree, @heckler.current_tree
     assert_equal original_mutatees, @heckler.mutatees
 
     3.times { @heckler.process(@heckler.current_tree) }
-    assert_not_equal original_tree, @heckler.current_tree
-    assert_not_equal original_mutatees, @heckler.mutatees
+    refute_equal original_tree, @heckler.current_tree
+    refute_equal original_mutatees, @heckler.mutatees
 
     @heckler.reset
     assert_equal original_tree, @heckler.current_tree
@@ -200,7 +203,7 @@ class TestHeckle < HeckleTestCase
     original_mutatees = @heckler.mutatees.deep_clone
 
     @heckler.process(@heckler.current_tree)
-    assert_not_equal original_mutatees, @heckler.mutatees
+    refute_equal original_mutatees, @heckler.mutatees
 
     @heckler.reset_mutatees
     assert_equal original_mutatees, @heckler.mutatees
@@ -501,7 +504,7 @@ end
 
 class TestHeckleClassMethod < HeckleTestCase
   def setup
-    @name = "self.is_a_klass_method?"
+    @method_name = "self.is_a_klass_method?"
     @nodes = s(:true)
     super
   end
