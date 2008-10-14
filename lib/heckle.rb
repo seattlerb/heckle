@@ -205,13 +205,13 @@ class Heckle < SexpProcessor
   def heckle(exp)
     exp_copy = exp.deep_clone
     src = begin
-            RubyToRuby.new.process(exp)
+            Ruby2Ruby.new.process(exp)
           rescue => e
             puts "Error: #{e.message} with: #{klass_name}##{method_name}: #{exp_copy.inspect}"
             raise e
           end
 
-    original = RubyToRuby.new.process(@original_tree.deep_clone)
+    original = Ruby2Ruby.new.process(@original_tree.deep_clone)
     @reporter.replacing(klass_name, method_name, original, src) if @@debug
 
     clean_name = method_name.to_s.gsub(/self\./, '')
@@ -260,7 +260,7 @@ class Heckle < SexpProcessor
     recv = process exp.shift
     meth = exp.shift
 
-    self.method = "#{RubyToRuby.new.process(recv.deep_clone)}.#{meth}".intern
+    self.method = "#{Ruby2Ruby.new.process(recv.deep_clone)}.#{meth}".intern
 
     result = s(:defs, recv, meth)
     result << process(exp.shift) until exp.empty?
