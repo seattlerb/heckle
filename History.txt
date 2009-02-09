@@ -1,7 +1,8 @@
-=== 1.4.2 / ??
+=== 1.4.2 / 2009-02-08
 
-* N bug fixes:
+* 2 bug fixes:
 
+  * Fixed Ruby2Ruby dependency and Ruby2Ruby references (name changed).
   * Fix bug #11435 where [:iter, [:call], ...] would cause an endless
     loop.  Reported by Thomas Preymesser.
 

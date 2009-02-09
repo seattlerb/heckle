@@ -188,7 +188,7 @@ class Heckle < SexpProcessor
     unless @failures.empty?
       @reporter.no_failures
       @failures.each do |failure|
-        original = RubyToRuby.new.process(@original_tree.deep_clone)
+        original = Ruby2Ruby.new.process(@original_tree.deep_clone)
         @reporter.failure(original, failure)
       end
       false
@@ -600,7 +600,7 @@ class Heckle < SexpProcessor
   end
 
   def current_code
-    RubyToRuby.translate(klass_name.to_class, method_name)
+    Ruby2Ruby.translate(klass_name.to_class, method_name)
   end
 
   ##
