@@ -25,6 +25,8 @@ Hoe.new('heckle', Heckle::VERSION) do |heckle|
   heckle.extra_deps << ['ParseTree', '>= 2.0.0']
   heckle.extra_deps << ['ruby2ruby', '>= 1.1.6']
   heckle.extra_deps << ['ZenTest', '>= 3.5.2']
+
+  heckle.multiruby_skip << "1.9"
 end
 
 # vim: syntax=Ruby
