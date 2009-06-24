@@ -1,3 +1,10 @@
+=== 1.4.3 / 2009-06-23
+
+* 2 minor enhancements:
+
+  * Added autotest/heckle plugin
+  * Skipping testing on 1.9
+
 === 1.4.2 / 2009-02-08
 
 * 2 bug fixes:
