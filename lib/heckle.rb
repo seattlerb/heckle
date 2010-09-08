@@ -600,7 +600,7 @@ class Heckle < SexpProcessor
   end
 
   def current_code
-    Ruby2Ruby.translate(klass_name.to_class, method_name)
+    Ruby2Ruby.new.process ParseTree.translate(klass_name.to_class, method_name)
   end
 
   ##
