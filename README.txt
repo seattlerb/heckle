@@ -1,7 +1,8 @@
 = heckle
 
-* http://www.rubyforge.org/projects/seattlerb
-* http://seattlerb.rubyforge.org/heckle
+home :: http://ruby.sadi.st/Heckle.html
+repo :: https://github.com/seattlerb/heckle
+rdoc :: http://seattlerb.rubyforge.org/heckle
 
 == DESCRIPTION:
 
@@ -32,7 +33,7 @@ It's like hiring a white-hat hacker to try to break into your server and making 
 
 (The MIT License)
 
-Copyright (c) 2006-2008 Ryan Davis and Kevin Clark
+Copyright (c) Ryan Davis, seattle.rb, and Kevin Clark
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
