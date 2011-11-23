@@ -22,7 +22,7 @@ It's like hiring a white-hat hacker to try to break into your server and making 
 
 == REQUIREMENTS:
 
-* ruby2ruby 1.1.2 or greater
+* ruby2ruby 1.2.2
 * ParseTree 1.6.1 or greater
 
 == INSTALL:

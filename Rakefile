@@ -22,7 +22,7 @@ Hoe.spec 'heckle' do
 
   clean_globs    << File.expand_path("~/.ruby_inline")
   extra_deps     << ['ParseTree', '>= 2.0.0']
-  extra_deps     << ['ruby2ruby', '>= 1.1.6']
+  extra_deps     << ['ruby2ruby', '1.2.2']
   extra_deps     << ['ZenTest', '>= 3.5.2']
   multiruby_skip << "1.9"
 end
