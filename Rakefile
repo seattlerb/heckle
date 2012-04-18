@@ -6,7 +6,7 @@ require 'hoe'
 Hoe.add_include_dirs("../../ParseTree/dev/lib",
                      "../../ParseTree/dev/test",
                      "../../RubyInline/dev/lib",
-                     "../../ruby2ruby/dev/lib",
+                     "../../ruby2ruby/1.3.1/lib",
                      "../../ZenTest/dev/lib",
                      "../../sexp_processor/dev/lib",
                      "lib")
@@ -20,11 +20,13 @@ Hoe.spec 'heckle' do
 
   self.rubyforge_name = 'seattlerb'
 
-  clean_globs    << File.expand_path("~/.ruby_inline")
-  extra_deps     << ['ParseTree', '>= 2.0.0']
-  extra_deps     << ['ruby2ruby', '>= 1.1.6']
-  extra_deps     << ['ZenTest', '>= 3.5.2']
-  multiruby_skip << "1.9"
+  clean_globs << File.expand_path("~/.ruby_inline")
+
+  dependency 'ParseTree', '~> 2.2.0'
+  dependency 'ruby2ruby', '~> 1.3.0'
+  dependency 'ZenTest',   '~> 4.7.0'
+
+  multiruby_skip << "1.9" << "trunk"
 end
 
 # vim: syntax=ruby

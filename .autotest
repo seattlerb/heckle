@@ -3,10 +3,12 @@
 require 'autotest/restart'
 
 Autotest.add_hook :initialize do |at|
+  at.libs << ":../../ParseTree/dev/lib"
+  at.libs << ":../../ParseTree/dev/test"
   at.libs << ":../../RubyInline/dev/lib"
-  at.libs << ":../../ParseTree/dev/lib:../../ParseTree/dev/test"
+  at.libs << ":../../ruby2ruby/1.3.1/lib"
+  at.libs << ":../../ZenTest/dev/lib"
   at.libs << ":../../sexp_processor/dev/lib"
-  at.libs << ":../../ruby2ruby/dev/lib"
 
   %w(Dasgn Iter Dasgncurr Cvasgn Boolean Call Callblock
      ClassMethod Gasgn Iasgn If Lasgn Masgn Ranges Regexes

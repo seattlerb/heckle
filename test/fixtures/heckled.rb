@@ -96,6 +96,10 @@ class Heckled
     c = 3.3
   end
 
+  def uses_literal
+    i = 1
+  end
+
   def uses_same_literal
     i = 1
     i = 1
