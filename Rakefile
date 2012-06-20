@@ -22,7 +22,7 @@ Hoe.spec 'heckle' do
 
   clean_globs << File.expand_path("~/.ruby_inline")
 
-  dependency 'ParseTree', '~> 2.2.0'
+  dependency 'ruby_parser', '~> 2.3.1'
   dependency 'ruby2ruby', '~> 1.3.0'
   dependency 'ZenTest',   '~> 4.7.0'
 

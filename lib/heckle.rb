@@ -1,5 +1,5 @@
 require 'rubygems'
-require 'parse_tree'
+require 'ruby_parser'
 require 'sexp_processor'
 require 'ruby2ruby'
 require 'timeout'
@@ -8,6 +8,25 @@ require 'tempfile'
 class String # :nodoc:
   def to_class
     split(/::/).inject(Object) { |klass, name| klass.const_get(name) }
+  end
+end
+
+class Sexp
+  # REFACTOR: move to sexp.rb
+  def deep_each(&block)
+    self.each_sexp do |sexp|
+      block[sexp]
+      sexp.deep_each(&block)
+    end
+  end
+
+  # REFACTOR: move to sexp.rb
+  def each_sexp
+    self.each do |sexp|
+      next unless Sexp === sexp
+
+      yield sexp
+    end
   end
 end
 
@@ -499,13 +518,80 @@ class Heckle < SexpProcessor
   end
 
   def current_tree
-    ur = Unifier.new
+    #ur = Unifier.new
+    #
+    #sexp = ParseTree.translate(klass_name.to_class, method_name)
+    #raise "sexp invalid for #{klass_name}##{method_name}" if sexp == [nil]
+    #sexp = ur.process(sexp)
 
-    sexp = ParseTree.translate(klass_name.to_class, method_name)
-    raise "sexp invalid for #{klass_name}##{method_name}" if sexp == [nil]
-    sexp = ur.process(sexp)
+    sexp = find_class_and_method
 
     rewrite sexp
+  end
+
+  # Copied from Flay#process
+  def find_class_and_method
+    expand_dirs_to_files('.').each do |file|
+    #expand_dirs_to_files('sample').each do |file|
+      #warn "Processing #{file}" if option[:verbose]
+
+      ext = File.extname(file).sub(/^\./, '')
+      ext = "rb" if ext.nil? || ext.empty?
+      msg = "process_#{ext}"
+
+      unless respond_to? msg then
+        warn " Unknown file type: #{ext}, defaulting to ruby"
+        msg = "process_rb"
+      end
+
+      begin
+        sexp = begin
+                 send msg, file
+               rescue => e
+                 warn " #{e.message.strip}"
+                 warn " skipping #{file}"
+                 nil
+               end
+
+        next unless sexp
+
+        found = process_sexp sexp
+
+        return found if found
+      rescue SyntaxError => e
+        warn " skipping #{file}: #{e.message}"
+      end
+    end
+
+    nil
+  end
+
+  def process_rb file
+    RubyParser.new.process(File.read(file), file)
+  end
+
+  def process_sexp pt
+    if pt[0] == :class && pt[1] == klass_name.to_sym
+      return pt if method_name.nil?
+
+      pt.deep_each do |node|
+        return node if node[0] == :defn && node[1] == method_name.to_sym
+      end
+    end
+
+    nil
+  end
+
+  def expand_dirs_to_files *dirs
+    extensions = ['rb'] # + Flay.load_plugins
+
+    dirs.flatten.map { |p|
+      if File.directory? p then
+        Dir[File.join(p, '**', "*.{#{extensions.join(',')}}")]
+      else
+        p
+      end
+    }.flatten
   end
 
   def reset

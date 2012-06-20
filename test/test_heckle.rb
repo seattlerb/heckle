@@ -39,7 +39,7 @@ class HeckleTestCase < Test::Unit::TestCase
       @hecklee = "uses#{data}"
     end
 
-    @heckler = TestHeckler.new("Heckled", @hecklee, @nodes) rescue nil
+    @heckler = TestHeckler.new("Heckled", @hecklee, @nodes)
   end
 
   def teardown
