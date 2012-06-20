@@ -129,6 +129,8 @@ class Heckle < SexpProcessor
     @klass_name = klass_name
     @method_name = method_name.intern if method_name
 
+    @mutations = []
+
     @klass = klass_name.to_class
 
     @method = nil
@@ -150,9 +152,11 @@ class Heckle < SexpProcessor
 
     @mutated = false
 
+    @original_tree = rewrite find_class_and_method
+    @current_tree = @original_tree.deep_clone
+
     grab_mutatees
 
-    @original_tree = current_tree.deep_clone
     @original_mutatees = mutatees.deep_clone
   end
 
@@ -230,17 +234,17 @@ class Heckle < SexpProcessor
             raise e
           end
 
-    original = Ruby2Ruby.new.process(@original_tree.deep_clone)
-    @reporter.replacing(klass_name, method_name, original, src) if @@debug
+    @current_tree = exp_copy.deep_clone
 
-    clean_name = method_name.to_s.gsub(/self\./, '')
+    #original = Ruby2Ruby.new.process(@original_tree.deep_clone)
+    #@reporter.replacing(klass_name, method_name, original, src) if @@debug
+
     self.count += 1
-    new_name = "h#{count}_#{clean_name}"
+    new_name = "h#{count}_#{method_name}"
 
-    klass = aliasing_class method_name
     klass.send :remove_method, new_name rescue nil
-    klass.send :alias_method, new_name, clean_name
-    klass.send :remove_method, clean_name rescue nil
+    klass.send :alias_method, new_name, method_name
+    klass.send :remove_method, method_name rescue nil
 
     @klass.class_eval src, "(#{new_name})"
   end
@@ -518,15 +522,7 @@ class Heckle < SexpProcessor
   end
 
   def current_tree
-    #ur = Unifier.new
-    #
-    #sexp = ParseTree.translate(klass_name.to_class, method_name)
-    #raise "sexp invalid for #{klass_name}##{method_name}" if sexp == [nil]
-    #sexp = ur.process(sexp)
-
-    sexp = find_class_and_method
-
-    rewrite sexp
+    @current_tree.deep_clone
   end
 
   # Copied from Flay#process
@@ -606,14 +602,13 @@ class Heckle < SexpProcessor
 
     self.count += 1
 
-    clean_name = method_name.to_s.gsub(/self\./, '')
-    new_name = "h#{count}_#{clean_name}"
+    @current_tree = original_tree.deep_clone
 
-    klass = aliasing_class method_name
+    new_name = "h#{count}_#{method_name}"
 
-    klass.send :undef_method, new_name rescue nil
-    klass.send :alias_method, new_name, clean_name
-    klass.send :alias_method, clean_name, "h1_#{clean_name}"
+    @klass.send :undef_method, new_name rescue nil
+    @klass.send :alias_method, new_name, method_name
+    @klass.send :alias_method, method_name, "h1_#{method_name}"
   end
 
   def reset_mutatees
@@ -635,14 +630,17 @@ class Heckle < SexpProcessor
   ############################################################
   ### Convenience methods
 
-  def aliasing_class(method_name)
-    method_name.to_s =~ /self\./ ? class << @klass; self; end : @klass
-  end
-
   def should_heckle?(exp)
     return false unless method == method_name
     return false if node_count[exp] <= mutation_count[exp]
+
     key = exp.first.to_sym
+
+    #p [:key, key]
+    #p [:mutatees, mutatees]
+    #p [:mutatees_include, mutatees.include?(key)]
+    #p [:key_include, mutatees[key].include?(exp)]
+    #p [:already?, already_mutated?]
 
     mutatees.include?(key) && mutatees[key].include?(exp) && !already_mutated?
   end
