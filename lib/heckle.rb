@@ -240,11 +240,13 @@ class Heckle < SexpProcessor
     end
 
     self.count += 1
-    new_name = "h#{count}_#{method_name}"
 
+    clean_name = method_name.to_s.gsub(/self\./, '')
+    new_name = "h#{count}_#{clean_name}"
+    klass = aliasing_class method_name
     klass.send :remove_method, new_name rescue nil
-    klass.send :alias_method, new_name, method_name
-    klass.send :remove_method, method_name rescue nil
+    klass.send :alias_method, new_name, clean_name
+    klass.send :remove_method, clean_name rescue nil
 
     @klass.class_eval src, "(#{new_name})"
   end
@@ -558,7 +560,7 @@ class Heckle < SexpProcessor
       end
     end
 
-    nil
+    raise "Couldn't find method."
   end
 
   def process_rb file
@@ -566,11 +568,18 @@ class Heckle < SexpProcessor
   end
 
   def process_sexp pt
+    class_method = method_name.to_s =~ /^self\./
+    clean_name = method_name.to_s.sub(/^self\./, '').to_sym
+
     if pt[0] == :class && pt[1] == klass_name.to_sym
       return pt if method_name.nil?
 
       pt.deep_each do |node|
-        return node if node[0] == :defn && node[1] == method_name.to_sym
+        if class_method
+          return node if node[0] == :defs && node[2] == clean_name
+        else
+          return node if node[0] == :defn && node[1] == clean_name
+        end
       end
     end
 
@@ -599,15 +608,18 @@ class Heckle < SexpProcessor
     return unless original_tree != current_tree
     @mutated = false
 
-    self.count += 1
-
     @current_tree = original_tree.deep_clone
 
-    new_name = "h#{count}_#{method_name}"
+    self.count += 1
 
-    @klass.send :undef_method, new_name rescue nil
-    @klass.send :alias_method, new_name, method_name
-    @klass.send :alias_method, method_name, "h1_#{method_name}"
+    clean_name = method_name.to_s.gsub(/self\./, '')
+    new_name = "h#{count}_#{clean_name}"
+
+    klass = aliasing_class method_name
+
+    klass.send :undef_method, new_name rescue nil
+    klass.send :alias_method, new_name, clean_name
+    klass.send :alias_method, clean_name, "h1_#{clean_name}" 
   end
 
   def reset_mutatees
@@ -628,6 +640,10 @@ class Heckle < SexpProcessor
 
   ############################################################
   ### Convenience methods
+
+  def aliasing_class(method_name)
+    method_name.to_s =~ /self\./ ? class << @klass; self; end : @klass
+  end
 
   def should_heckle?(exp)
     return false unless method == method_name
