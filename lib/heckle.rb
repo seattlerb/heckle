@@ -236,8 +236,8 @@ class Heckle < SexpProcessor
 
     @current_tree = exp_copy.deep_clone
 
-    #original = Ruby2Ruby.new.process(@original_tree.deep_clone)
-    #@reporter.replacing(klass_name, method_name, original, src) if @@debug
+    original = Ruby2Ruby.new.process(@original_tree.deep_clone)
+    @reporter.replacing(klass_name, method_name, original, src) if @@debug
 
     self.count += 1
     new_name = "h#{count}_#{method_name}"
@@ -528,8 +528,7 @@ class Heckle < SexpProcessor
   # Copied from Flay#process
   def find_class_and_method
     expand_dirs_to_files('.').each do |file|
-    #expand_dirs_to_files('sample').each do |file|
-      #warn "Processing #{file}" if option[:verbose]
+      warn "Processing #{file}" if option[:verbose]
 
       ext = File.extname(file).sub(/^\./, '')
       ext = "rb" if ext.nil? || ext.empty?
