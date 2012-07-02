@@ -226,18 +226,18 @@ class Heckle < SexpProcessor
   end
 
   def heckle(exp)
-    exp_copy = exp.deep_clone
+    @current_tree = exp.deep_clone
     src = begin
             Ruby2Ruby.new.process(exp)
           rescue => e
-            puts "Error: #{e.message} with: #{klass_name}##{method_name}: #{exp_copy.inspect}"
+            puts "Error: #{e.message} with: #{klass_name}##{method_name}: #{@current_tree.inspect}"
             raise e
           end
 
-    @current_tree = exp_copy.deep_clone
-
-    original = Ruby2Ruby.new.process(@original_tree.deep_clone)
-    @reporter.replacing(klass_name, method_name, original, src) if @@debug
+    if @@debug
+      original = Ruby2Ruby.new.process(@original_tree.deep_clone)
+      @reporter.replacing(klass_name, method_name, original, src)
+    end
 
     self.count += 1
     new_name = "h#{count}_#{method_name}"
@@ -632,14 +632,7 @@ class Heckle < SexpProcessor
   def should_heckle?(exp)
     return false unless method == method_name
     return false if node_count[exp] <= mutation_count[exp]
-
     key = exp.first.to_sym
-
-    #p [:key, key]
-    #p [:mutatees, mutatees]
-    #p [:mutatees_include, mutatees.include?(key)]
-    #p [:key_include, mutatees[key].include?(exp)]
-    #p [:already?, already_mutated?]
 
     mutatees.include?(key) && mutatees[key].include?(exp) && !already_mutated?
   end
