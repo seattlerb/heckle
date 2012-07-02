@@ -129,8 +129,6 @@ class Heckle < SexpProcessor
     @klass_name = klass_name
     @method_name = method_name.intern if method_name
 
-    @mutations = []
-
     @klass = klass_name.to_class
 
     @method = nil
@@ -619,7 +617,7 @@ class Heckle < SexpProcessor
 
     klass.send :undef_method, new_name rescue nil
     klass.send :alias_method, new_name, clean_name
-    klass.send :alias_method, clean_name, "h1_#{clean_name}" 
+    klass.send :alias_method, clean_name, "h1_#{clean_name}"
   end
 
   def reset_mutatees
