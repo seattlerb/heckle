@@ -528,7 +528,7 @@ class Heckle < SexpProcessor
   # Copied from Flay#process
   def find_class_and_method
     expand_dirs_to_files('.').each do |file|
-      warn "Processing #{file}" if option[:verbose]
+      #warn "Processing #{file}" if option[:verbose]
 
       ext = File.extname(file).sub(/^\./, '')
       ext = "rb" if ext.nil? || ext.empty?
