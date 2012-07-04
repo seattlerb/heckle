@@ -9,6 +9,7 @@ Hoe.add_include_dirs("../../ParseTree/dev/lib",
                      "../../ruby2ruby/1.3.1/lib",
                      "../../ZenTest/dev/lib",
                      "../../sexp_processor/dev/lib",
+                     "../../ruby_parser/2.3.1/lib",
                      "lib")
 
 Hoe.plugin :seattlerb
