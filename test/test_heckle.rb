@@ -19,12 +19,7 @@ class TestHeckler < Heckle
   end
 end
 
-class HeckleTestCase < Test::Unit::TestCase
-  unless defined? Mini then
-    undef_method :default_test if method_defined? :default_test
-    alias :refute_equal :assert_not_equal
-  end
-
+class HeckleTestCase < MiniTest::Unit::TestCase
   def setup
     @nodes ||= Heckle::MUTATABLE_NODES
     unless defined? @hecklee then
