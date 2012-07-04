@@ -1,5 +1,5 @@
 require 'rubygems'
-require 'parse_tree'
+require 'ruby_parser'
 require 'sexp_processor'
 require 'ruby2ruby'
 require 'timeout'
@@ -8,6 +8,25 @@ require 'tempfile'
 class String # :nodoc:
   def to_class
     split(/::/).inject(Object) { |klass, name| klass.const_get(name) }
+  end
+end
+
+class Sexp
+  # REFACTOR: move to sexp.rb
+  def deep_each(&block)
+    self.each_sexp do |sexp|
+      block[sexp]
+      sexp.deep_each(&block)
+    end
+  end
+
+  # REFACTOR: move to sexp.rb
+  def each_sexp
+    self.each do |sexp|
+      next unless Sexp === sexp
+
+      yield sexp
+    end
   end
 end
 
@@ -131,9 +150,11 @@ class Heckle < SexpProcessor
 
     @mutated = false
 
+    @original_tree = rewrite find_class_and_method
+    @current_tree = @original_tree.deep_clone
+
     grab_mutatees
 
-    @original_tree = current_tree.deep_clone
     @original_mutatees = mutatees.deep_clone
   end
 
@@ -203,21 +224,23 @@ class Heckle < SexpProcessor
   end
 
   def heckle(exp)
-    exp_copy = exp.deep_clone
+    @current_tree = exp.deep_clone
     src = begin
             Ruby2Ruby.new.process(exp)
           rescue => e
-            puts "Error: #{e.message} with: #{klass_name}##{method_name}: #{exp_copy.inspect}"
+            puts "Error: #{e.message} with: #{klass_name}##{method_name}: #{@current_tree.inspect}"
             raise e
           end
 
-    original = Ruby2Ruby.new.process(@original_tree.deep_clone)
-    @reporter.replacing(klass_name, method_name, original, src) if @@debug
+    if @@debug
+      original = Ruby2Ruby.new.process(@original_tree.deep_clone)
+      @reporter.replacing(klass_name, method_name, original, src)
+    end
+
+    self.count += 1
 
     clean_name = method_name.to_s.gsub(/self\./, '')
-    self.count += 1
     new_name = "h#{count}_#{clean_name}"
-
     klass = aliasing_class method_name
     klass.send :remove_method, new_name rescue nil
     klass.send :alias_method, new_name, clean_name
@@ -499,13 +522,78 @@ class Heckle < SexpProcessor
   end
 
   def current_tree
-    ur = Unifier.new
+    @current_tree.deep_clone
+  end
 
-    sexp = ParseTree.translate(klass_name.to_class, method_name)
-    raise "sexp invalid for #{klass_name}##{method_name}" if sexp == [nil]
-    sexp = ur.process(sexp)
+  # Copied from Flay#process
+  def find_class_and_method
+    expand_dirs_to_files('.').each do |file|
+      #warn "Processing #{file}" if option[:verbose]
 
-    rewrite sexp
+      ext = File.extname(file).sub(/^\./, '')
+      ext = "rb" if ext.nil? || ext.empty?
+      msg = "process_#{ext}"
+
+      unless respond_to? msg then
+        warn " Unknown file type: #{ext}, defaulting to ruby"
+        msg = "process_rb"
+      end
+
+      begin
+        sexp = begin
+                 send msg, file
+               rescue => e
+                 warn " #{e.message.strip}"
+                 warn " skipping #{file}"
+                 nil
+               end
+
+        next unless sexp
+
+        found = process_sexp sexp
+
+        return found if found
+      rescue SyntaxError => e
+        warn " skipping #{file}: #{e.message}"
+      end
+    end
+
+    raise "Couldn't find method."
+  end
+
+  def process_rb file
+    RubyParser.new.process(File.read(file), file)
+  end
+
+  def process_sexp pt
+    class_method = method_name.to_s =~ /^self\./
+    clean_name = method_name.to_s.sub(/^self\./, '').to_sym
+
+    if pt[0] == :class && pt[1] == klass_name.to_sym
+      return pt if method_name.nil?
+
+      pt.deep_each do |node|
+        if class_method
+          return node if node[0] == :defs && node[2] == clean_name
+        else
+          return node if node[0] == :defn && node[1] == clean_name
+        end
+      end
+    end
+
+    nil
+  end
+
+  def expand_dirs_to_files *dirs
+    extensions = ['rb'] # + Flay.load_plugins
+
+    dirs.flatten.map { |p|
+      if File.directory? p then
+        Dir[File.join(p, '**', "*.{#{extensions.join(',')}}")]
+      else
+        p
+      end
+    }.flatten
   end
 
   def reset
@@ -517,6 +605,8 @@ class Heckle < SexpProcessor
   def reset_tree
     return unless original_tree != current_tree
     @mutated = false
+
+    @current_tree = original_tree.deep_clone
 
     self.count += 1
 
