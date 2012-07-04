@@ -834,7 +834,7 @@ class Heckle < SexpProcessor
   # All nodes that can be mutated by Heckle.
 
   MUTATABLE_NODES = instance_methods.grep(/mutate_/).sort.map do |meth|
-    meth.sub(/mutate_/, '').intern
+    meth.to_s.sub(/mutate_/, '').intern
   end - [:asgn, :node] # Ignore these methods
 
   ##
