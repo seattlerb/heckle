@@ -1,10 +1,5 @@
-$:.unshift(File.dirname(__FILE__) + '/fixtures')
-$:.unshift(File.dirname(__FILE__) + '/../lib')
-
-require 'test/unit/testcase'
-require 'test/unit' if $0 == __FILE__
 require 'test_unit_heckler'
-require 'heckled'
+require 'fixtures/heckled'
 
 class TestHeckler < Heckle
   def rand(*args)
@@ -26,7 +21,7 @@ end
 
 class HeckleTestCase < Test::Unit::TestCase
   unless defined? Mini then
-    undef_method :default_test
+    undef_method :default_test if method_defined? :default_test
     alias :refute_equal :assert_not_equal
   end
 

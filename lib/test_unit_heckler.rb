@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'test/unit/autorunner'
 require 'test/unit/testcase'
 require 'heckle'
 require 'zentest_mapping'
