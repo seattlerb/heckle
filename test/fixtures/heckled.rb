@@ -156,6 +156,43 @@ class Heckled
   def self.is_a_klass_method?
     true
   end
+
+  module OuterNesting
+    def foo
+      -1
+    end
+
+    module InnerNesting
+      def foo
+        -2
+      end
+
+      class InnerClass
+        def bar
+          -1
+        end
+      end
+    end
+
+    module InnerNesting
+      def foo
+        -3
+      end
+
+      class InnerClass
+        module DecoyNesting
+          def foo
+            -4
+          end
+        end
+
+        def foo
+          1337
+        end
+      end
+    end
+  end
+
   private
 
   def some_func; end

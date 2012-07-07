@@ -21,6 +21,8 @@ end
 
 class HeckleTestCase < MiniTest::Unit::TestCase
   def setup
+    @klass ||= "Heckled"
+
     @nodes ||= Heckle::MUTATABLE_NODES
     unless defined? @hecklee then
       data = self.class.name.sub(/HeckleTestCase/, '').sub(/TestHeckle/, '')
@@ -29,7 +31,7 @@ class HeckleTestCase < MiniTest::Unit::TestCase
       @hecklee = "uses#{data}"
     end
 
-    @heckler = TestHeckler.new("Heckled", @hecklee, @nodes)
+    @heckler = TestHeckler.new(@klass, @hecklee, @nodes)
   end
 
   def teardown
@@ -729,5 +731,23 @@ class TestHeckleIter < HeckleTestCase
 
     @heckler.process(@heckler.current_tree)
     assert_equal(expected, @heckler.current_tree)
+  end
+end
+
+
+class TestHeckleFindsNestedClassAndModule < HeckleTestCase
+  def setup
+    @klass = "Heckled::OuterNesting::InnerNesting::InnerClass"
+    @hecklee = "foo"
+    @nodes = []
+    super
+  end
+
+  def test_default_structure
+    expected =  s(:defn, :foo, s(:args), s(:scope,
+                  s(:block,
+                    s(:lit, 1337))))
+
+    assert_equal expected, @heckler.current_tree
   end
 end
