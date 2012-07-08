@@ -519,7 +519,7 @@ class Heckle < SexpProcessor
 
   # Copied from Flay#process
   def find_scope_and_method
-    expand_dirs_to_files('.').each do |file|
+    expand_dirs_to_files.each do |file|
       #warn "Processing #{file}" if option[:verbose]
 
       ext = File.extname(file).sub(/^\./, '')
@@ -602,12 +602,25 @@ class Heckle < SexpProcessor
     nil
   end
 
-  def expand_dirs_to_files *dirs
-    extensions = ['rb'] # + Flay.load_plugins
+  def expand_dirs_to_files
+    dirs = if Method.instance_methods.include? :source_location
+      class_method = method_name.to_s =~ /^self\./
+      clean_name = method_name.to_s.sub(/^self\./, '').to_sym
+
+      method = if class_method
+        klass.method(clean_name)
+      else
+        klass.instance_method(clean_name)
+      end
+
+      [method.source_location.first]
+    else
+      ['.']
+    end
 
     dirs.flatten.map { |p|
       if File.directory? p then
-        Dir[File.join(p, '**', "*.{#{extensions.join(',')}}")]
+        Dir[File.join(p, '**', "*.rb")]
       else
         p
       end
