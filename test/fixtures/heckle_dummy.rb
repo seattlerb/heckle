@@ -1,4 +1,4 @@
-class Heckled
+class HeckleDummy
   attr_accessor :names
 
   def initialize

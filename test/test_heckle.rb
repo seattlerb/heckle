@@ -1,5 +1,5 @@
-require 'test_unit_heckler'
-require 'fixtures/heckled'
+require 'fixtures/heckle_dummy'
+require 'heckle'
 
 class TestHeckler < Heckle
   def rand(*args)
@@ -21,53 +21,15 @@ end
 
 class HeckleTestCase < MiniTest::Unit::TestCase
   def setup
-    @klass ||= "Heckled"
-
+    @klass ||= "HeckleDummy"
     @nodes ||= Heckle::MUTATABLE_NODES
-    unless defined? @hecklee then
-      data = self.class.name.sub(/HeckleTestCase/, '').sub(/TestHeckle/, '')
-      data = data.gsub(/([A-Z])/, '_\1').downcase
-      data = "_many_things" if data.empty?
-      @hecklee = "uses#{data}"
-    end
+    @method_heckled ||= 'uses_many_things'
 
-    @heckler = TestHeckler.new(@klass, @hecklee, @nodes)
+    @heckler = TestHeckler.new(@klass, @method_heckled, @nodes)
   end
 
   def teardown
     @heckler.reset if defined?(@heckler) && @heckler
-  end
-end
-
-class LiteralHeckleTestCase < HeckleTestCase
-  def setup
-    @nodes = s(:lit, :str)
-    super
-  end
-
-  def toggle(value, toggle)
-    toggle ? self.class::TOGGLE_VALUE : value
-  end
-
-  def test_default_structure
-    return if self.class == LiteralHeckleTestCase
-    assert_equal util_expected, @heckler.current_tree
-  end
-
-  def test_should_iterate_mutations
-    return if self.class == LiteralHeckleTestCase
-    @heckler.process(@heckler.current_tree)
-    assert_equal util_expected(1), @heckler.current_tree
-
-    @heckler.reset_tree
-
-    @heckler.process(@heckler.current_tree)
-    assert_equal util_expected(2), @heckler.current_tree
-
-    @heckler.reset_tree
-
-    @heckler.process(@heckler.current_tree)
-    assert_equal util_expected(3), @heckler.current_tree
   end
 end
 
@@ -203,12 +165,51 @@ class TestHeckle < HeckleTestCase
   end
 end
 
-class TestHeckleNumericLiterals < HeckleTestCase
-  def toggle(value, toggle)
-    value + (toggle ? 5 : 0)
+class LiteralHeckleTestCase < HeckleTestCase
+  def setup
+    @nodes = s(:lit, :str)
+    super
   end
 
-  def util_expected(n)
+  def toggle(value, toggle)
+    toggle ? self.class::TOGGLE_VALUE : value
+  end
+
+  def test_default_structure
+    return if self.class == LiteralHeckleTestCase
+    assert_equal util_expected, @heckler.current_tree
+  end
+
+  def test_should_iterate_mutations
+    return if self.class == LiteralHeckleTestCase
+    @heckler.process(@heckler.current_tree)
+    assert_equal util_expected(1), @heckler.current_tree
+
+    @heckler.reset_tree
+
+    @heckler.process(@heckler.current_tree)
+    assert_equal util_expected(2), @heckler.current_tree
+
+    @heckler.reset_tree
+
+    @heckler.process(@heckler.current_tree)
+    assert_equal util_expected(3), @heckler.current_tree
+  end
+end
+
+class TestHeckleNumericLiterals < LiteralHeckleTestCase
+  TOGGLE_VALUE = 5
+
+  def setup
+    @method_heckled = "uses_numeric_literals"
+    super
+  end
+
+  def toggle(value, toggle)
+    toggle ? value + self.class::TOGGLE_VALUE : value
+  end
+
+  def util_expected(n=nil)
     s(:defn, :uses_numeric_literals,
       s(:args),
       s(:scope,
@@ -222,6 +223,11 @@ end
 
 class TestHeckleSymbols < LiteralHeckleTestCase
   TOGGLE_VALUE = :"l33t h4x0r"
+
+  def setup
+    @method_heckled = "uses_symbols"
+    super
+  end
 
   def util_expected(n = nil)
     s(:defn, :uses_symbols,
@@ -237,6 +243,11 @@ end
 class TestHeckleRegexes < LiteralHeckleTestCase
   TOGGLE_VALUE = /l33t\ h4x0r/
 
+  def setup
+    @method_heckled = "uses_regexes"
+    super
+  end
+
   def util_expected(n = nil)
     s(:defn, :uses_regexes,
       s(:args),
@@ -250,6 +261,11 @@ end
 
 class TestHeckleRanges < LiteralHeckleTestCase
   TOGGLE_VALUE = 5..10
+
+  def setup
+    @method_heckled = "uses_ranges"
+    super
+  end
 
   def util_expected(n = nil)
     s(:defn, :uses_ranges,
@@ -265,6 +281,11 @@ end
 class TestHeckleSameLiteral < LiteralHeckleTestCase
   TOGGLE_VALUE = 6
 
+  def setup
+    @method_heckled = "uses_same_literal"
+    super
+  end
+
   def util_expected(n = nil)
     s(:defn, :uses_same_literal,
       s(:args),
@@ -279,6 +300,11 @@ end
 class TestHeckleStrings < LiteralHeckleTestCase
   TOGGLE_VALUE = "l33t h4x0r"
 
+  def setup
+    @method_heckled = "uses_strings"
+    super
+  end
+
   def util_expected(n = nil)
     s(:defn, :uses_strings,
       s(:args),
@@ -292,6 +318,7 @@ end
 
 class TestHeckleIf < HeckleTestCase
   def setup
+    @method_heckled = "uses_if"
     @nodes = s(:if)
     super
   end
@@ -339,8 +366,8 @@ class TestHeckleIf < HeckleTestCase
 end
 
 class TestHeckleBoolean < HeckleTestCase
-
   def setup
+    @method_heckled = "uses_boolean"
     @nodes = s(:true, :false)
     super
   end
@@ -375,6 +402,7 @@ end
 
 class TestHeckleWhile < HeckleTestCase
   def setup
+    @method_heckled = "uses_while"
     @nodes = s(:while)
     super
   end
@@ -403,6 +431,7 @@ end
 
 class TestHeckleUntil < HeckleTestCase
   def setup
+    @method_heckled = "uses_until"
     @nodes = s(:until)
     super
   end
@@ -430,6 +459,10 @@ class TestHeckleUntil < HeckleTestCase
 end
 
 class TestHeckleCall < HeckleTestCase
+  def setup
+    @method_heckled = "uses_call"
+    super
+  end
 
   def test_call_deleted
     expected = s(:defn, :uses_call,
@@ -462,8 +495,8 @@ class TestHeckleCall < HeckleTestCase
 end
 
 class TestHeckleCallblock < HeckleTestCase
-
   def setup
+    @method_heckled = "uses_callblock"
     @nodes = s(:call)
     super
   end
@@ -497,7 +530,7 @@ end
 
 class TestHeckleClassMethod < HeckleTestCase
   def setup
-    @hecklee = "self.is_a_klass_method?"
+    @method_heckled = "self.is_a_klass_method?"
     @nodes = s(:true)
     super
   end
@@ -523,8 +556,8 @@ class TestHeckleClassMethod < HeckleTestCase
 end
 
 class TestHeckleCvasgn < HeckleTestCase
-
   def setup
+    @method_heckled = "uses_cvasgn"
     @nodes = s(:cvasgn)
     super
   end
@@ -558,8 +591,8 @@ class TestHeckleCvasgn < HeckleTestCase
 end
 
 class TestHeckleIasgn < HeckleTestCase
-
   def setup
+    @method_heckled = "uses_iasgn"
     @nodes = s(:iasgn)
     super
   end
@@ -593,8 +626,8 @@ class TestHeckleIasgn < HeckleTestCase
 end
 
 class TestHeckleGasgn < HeckleTestCase
-
   def setup
+    @method_heckled = "uses_gasgn"
     @nodes = s(:gasgn)
     super
   end
@@ -628,8 +661,8 @@ class TestHeckleGasgn < HeckleTestCase
 end
 
 class TestHeckleLasgn < HeckleTestCase
-
   def setup
+    @method_heckled = "uses_lasgn"
     @nodes = s(:lasgn)
     super
   end
@@ -663,8 +696,8 @@ class TestHeckleLasgn < HeckleTestCase
 end
 
 class TestHeckleMasgn < HeckleTestCase
-
   def setup
+    @method_heckled = "uses_masgn"
     @nodes = s(:dasgn, :dasgn_curr, :iasgn, :gasgn, :lasgn)
     super
   end
@@ -691,6 +724,7 @@ end
 
 class TestHeckleIter < HeckleTestCase
   def setup
+    @method_heckled = "uses_iter"
     @nodes = [ :call, :lasgn ]
     super
   end
@@ -737,8 +771,8 @@ end
 
 class TestHeckleFindsNestedClassAndModule < HeckleTestCase
   def setup
-    @klass = "Heckled::OuterNesting::InnerNesting::InnerClass"
-    @hecklee = "foo"
+    @klass = "HeckleDummy::OuterNesting::InnerNesting::InnerClass"
+    @method_heckled = "foo"
     @nodes = []
     super
   end
