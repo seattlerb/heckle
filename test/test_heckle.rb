@@ -58,7 +58,7 @@ class HeckleTestCase < MiniTest::Unit::TestCase
       heckle.reset_tree
     end until initial == mutant
 
-    mutations.reject! {|m| m == initial }
+    mutations.delete(initial)
 
     assert_equal expected.sort, mutations.sort,
       [ "expected: #{expected - mutations}",
