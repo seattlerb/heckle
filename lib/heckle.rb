@@ -602,23 +602,8 @@ class Heckle < SexpProcessor
     nil
   end
 
-  def expand_dirs_to_files
-    dirs = if Method.instance_methods.include? :source_location
-      class_method = method_name.to_s =~ /^self\./
-      clean_name = method_name.to_s.sub(/^self\./, '').to_sym
-
-      method = if class_method
-        klass.method(clean_name)
-      else
-        klass.instance_method(clean_name)
-      end
-
-      [method.source_location.first]
-    else
-      ['.']
-    end
-
-    dirs.flatten.map { |p|
+  def expand_dirs_to_files(dirs='.')
+    Array(dirs).flatten.map { |p|
       if File.directory? p then
         Dir[File.join(p, '**', "*.rb")]
       else

@@ -1,6 +1,16 @@
 require 'fixtures/heckle_dummy'
 require 'heckle'
 
+# Necessary for sorting arrays of Sexps in 1.8
+unless :<=>.respond_to? :<=>
+  class Symbol
+    def <=> other
+      return nil if other.nil?
+      to_s <=> other.to_s
+    end
+  end
+end
+
 class TestHeckler < Heckle
   def rand(*args)
     5
@@ -17,6 +27,11 @@ class TestHeckler < Heckle
   def rand_symbol
     :"l33t h4x0r"
   end
+
+  # HAX
+  def expand_dirs_to_files(*)
+    super('test/fixtures')
+  end
 end
 
 class HeckleTestCase < MiniTest::Unit::TestCase
@@ -30,6 +45,24 @@ class HeckleTestCase < MiniTest::Unit::TestCase
 
   def teardown
     @heckler.reset if defined?(@heckler) && @heckler
+  end
+
+  def assert_mutations expected, heckle
+    initial = heckle.current_tree.deep_clone
+    mutations = []
+
+    begin
+      heckle.process(heckle.current_tree)
+      mutant = heckle.current_tree
+      mutations << mutant
+      heckle.reset_tree
+    end until initial == mutant
+
+    mutations.reject! {|m| m == initial }
+
+    assert_equal expected.sort, mutations.sort,
+      [ "expected: #{expected - mutations}",
+        "mutations: #{mutations - expected}" ].join("\n")
   end
 end
 
@@ -667,32 +700,35 @@ class TestHeckleLasgn < HeckleTestCase
     super
   end
 
-  def test_lasgn_val
-    expected = s(:defn, :uses_lasgn,
-                 s(:args),
-                 s(:scope,
-                   s(:block,
-                     s(:lasgn, :lvar, s(:nil)),
-                     s(:lasgn, :lvar, s(:nil)))))
+  def test_lasgn_original_tree
+    expected =  s(:defn, :uses_lasgn,
+                  s(:args),
+                  s(:scope,
+                    s(:block,
+                      s(:lasgn, :lvar, s(:lit, 5)),
+                      s(:lasgn, :lvar, s(:nil)))))
 
-    @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
   end
 
-  def test_lasgn_nil
-    expected = s(:defn, :uses_lasgn,
-                 s(:args),
-                 s(:scope,
-                   s(:block,
-                     s(:lasgn, :lvar, s(:lit, 5)),
-                     s(:lasgn, :lvar, s(:lit, 42)))))
+  def test_lasgn_mutations
+    expected = [
+      s(:defn, :uses_lasgn,
+        s(:args),
+        s(:scope,
+          s(:block,
+            s(:lasgn, :lvar, s(:nil)),
+            s(:lasgn, :lvar, s(:nil))))),
+      s(:defn, :uses_lasgn,
+        s(:args),
+        s(:scope,
+          s(:block,
+            s(:lasgn, :lvar, s(:lit, 5)),
+            s(:lasgn, :lvar, s(:lit, 42))))),
+    ]
 
-    @heckler.process(@heckler.current_tree)
-    @heckler.reset_tree
-    @heckler.process(@heckler.current_tree)
-    assert_equal expected, @heckler.current_tree
+    assert_mutations expected, @heckler
   end
-
 end
 
 class TestHeckleMasgn < HeckleTestCase
@@ -702,22 +738,44 @@ class TestHeckleMasgn < HeckleTestCase
     super
   end
 
-  # Changed the first :iasgn from an :lasgn to get test to pass. Can't really
-  # say what's correct... --PH
-  def test_masgn
-    expected = s(:defn, :uses_masgn,
-                 s(:args),
-                 s(:scope,
-                   s(:block,
-                     s(:masgn,
-                       s(:array,
-                         s(:iasgn, :_heckle_dummy),
-                         s(:gasgn, :$b),
-                         s(:lasgn, :c)),
-                       s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7))))))
+  def test_masgn_original_tree
+    expected =  s(:defn, :uses_masgn,
+                  s(:args),
+                  s(:scope,
+                    s(:block,
+                      s(:masgn,
+                        s(:array, s(:iasgn, :@a), s(:gasgn, :$b), s(:lasgn, :c)),
+                        s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7))))))
 
-    @heckler.process(@heckler.current_tree)
     assert_equal expected, @heckler.current_tree
+  end
+
+  def test_masgn_mutations
+    expected = [
+      s(:defn, :uses_masgn,
+        s(:args),
+        s(:scope,
+          s(:block,
+            s(:masgn,
+              s(:array, s(:iasgn, :_heckle_dummy), s(:gasgn, :$b), s(:lasgn, :c)),
+              s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7)))))),
+      s(:defn, :uses_masgn,
+        s(:args),
+        s(:scope,
+          s(:block,
+            s(:masgn,
+              s(:array, s(:iasgn, :@a), s(:gasgn, :_heckle_dummy), s(:lasgn, :c)),
+              s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7)))))),
+      s(:defn, :uses_masgn,
+        s(:args),
+        s(:scope,
+          s(:block,
+            s(:masgn,
+              s(:array,s(:iasgn, :@a), s(:gasgn, :$b), s(:lasgn, :_heckle_dummy)),
+              s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7)))))),
+    ]
+
+    assert_mutations expected, @heckler
   end
 
 end
@@ -728,43 +786,42 @@ class TestHeckleIter < HeckleTestCase
     @nodes = [ :call, :lasgn ]
     super
   end
-  
-  def test_iter
-    expected = s(:defn, :uses_iter,
-                 s(:args),
-                 s(:scope,
-                   s(:block,
-                     s(:lasgn, :x, s(:nil)),
-                     s(:iter,
-                       s(:call, s(:lvar, :x), :each, s(:arglist)),
-                       s(:lasgn, :y),
-                       s(:lvar, :y)))))
-    
-    # This call causes the replacement of [:lasgn, :x...] above to
-    # become [:lasgn, :nil].  We then reset the tree to ensure that
-    # the original method is maintained.  We are really trying to test
-    # the reset_tree method here, not the actual changes.
 
-    @heckler.process(@heckler.current_tree)
-    assert_equal(expected, @heckler.current_tree)
+  def test_iter_original_tree
+    expected =  s(:defn, :uses_iter,
+                  s(:args),
+                  s(:scope,
+                    s(:block,
+                      s(:lasgn, :x, s(:array, s(:lit, 1), s(:lit, 2), s(:lit, 3))),
+                      s(:iter,
+                        s(:call, s(:lvar, :x), :each, s(:arglist)),
+                        s(:lasgn, :y), s(:lvar, :y)))))
 
-    @heckler.reset_tree
+    assert_equal expected, @heckler.current_tree
+  end
 
-    # Changed the expected value to get test to pass. Can't really say what's
-    # correct... --PH
-    expected = s(:defn, :uses_iter,
-                 s(:args),
-                 s(:scope,
-                   s(:block,
-                     s(:lasgn, :x, s(:array, s(:lit, 1), s(:lit, 2), s(:lit, 3))),
-                     s(:iter,
-                       s(:call, s(:lvar, :x), :each, s(:arglist)),
-                       s(:lasgn, :_heckle_dummy),
-                       #s(:call, nil, :y, s(:arglist))))))
-                       s(:lvar, :y)))))
+  def test_iter_mutations
+    expected = [
+      s(:defn, :uses_iter,
+        s(:args),
+        s(:scope,
+          s(:block,
+            s(:lasgn, :x, s(:nil)),
+            s(:iter,
+              s(:call, s(:lvar, :x), :each, s(:arglist)),
+              s(:lasgn, :y), s(:lvar, :y))))),
+      s(:defn, :uses_iter,
+        s(:args),
+        s(:scope,
+          s(:block,
+            s(:lasgn, :x, s(:array, s(:lit, 1), s(:lit, 2), s(:lit, 3))),
+            s(:iter,
+              s(:call, s(:lvar, :x), :each, s(:arglist)),
+              s(:lasgn, :_heckle_dummy), s(:lvar, :y))))),
+    ]
 
-    @heckler.process(@heckler.current_tree)
-    assert_equal(expected, @heckler.current_tree)
+
+    assert_mutations expected, @heckler
   end
 end
 
@@ -777,7 +834,7 @@ class TestHeckleFindsNestedClassAndModule < HeckleTestCase
     super
   end
 
-  def test_default_structure
+  def test_nested_class_and_module_original_tree
     expected =  s(:defn, :foo, s(:args), s(:scope,
                   s(:block,
                     s(:lit, 1337))))
