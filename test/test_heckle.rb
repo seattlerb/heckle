@@ -1,16 +1,6 @@
 require 'fixtures/heckle_dummy'
 require 'heckle'
 
-# Necessary for sorting arrays of Sexps in 1.8
-unless :<=>.respond_to? :<=>
-  class Symbol
-    def <=> other
-      return nil if other.nil?
-      to_s <=> other.to_s
-    end
-  end
-end
-
 class TestHeckler < Heckle
   def rand(*args)
     5
@@ -60,7 +50,9 @@ class HeckleTestCase < MiniTest::Unit::TestCase
 
     mutations.delete(initial)
 
-    assert_equal expected.sort, mutations.sort,
+    # HAX: Sorting an array of Sexps blows up in some cases.
+    assert_equal expected.map {|sexp| sexp.to_s }.sort,
+      mutations.map {|sexp| sexp.to_s }.sort,
       [ "expected:", (expected - mutations).map {|m| m.pretty_inspect},
         "mutations:", (mutations - expected).map {|m| m.pretty_inspect} ].join("\n")
   end
@@ -399,8 +391,6 @@ class TestHeckleIf < HeckleTestCase
   end
 
   def test_if_mutations
-    skip "broken sort"
-
     expected = [
       s(:defn,
         :uses_if,
@@ -418,7 +408,7 @@ class TestHeckleIf < HeckleTestCase
           s(:block,
             s(:if,
               s(:call, nil, :some_func, s(:arglist)),
-              s(:if, s(:call, nil, :some_other_func, s(:arglist)), s(:return), nil),
+              s(:if, s(:call, nil, :some_other_func, s(:arglist)), nil, s(:return)),
               nil))))
     ]
 
