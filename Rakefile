@@ -28,6 +28,8 @@ Hoe.spec 'heckle' do
   dependency 'ZenTest',   '~> 4.7.0'
 
   multiruby_skip << "1.9" << "trunk"
+
+  self.test_globs = ["test/test_*.rb"]
 end
 
 # vim: syntax=ruby
