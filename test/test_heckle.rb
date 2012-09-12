@@ -20,7 +20,7 @@ class TestHeckler < Heckle
 
   # HAX
   def expand_dirs_to_files(*)
-    super('test/fixtures')
+    super('test/fixtures/heckle_dummy.rb')
   end
 end
 
