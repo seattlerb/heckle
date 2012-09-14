@@ -10,7 +10,7 @@ namespace :heckle do
 
   desc "Run heckle with some test."
   task :fail do
-    puts `../../../bin/heckle Doubler double --tests "test/test_doubler_with_a_number.rb"`
+    puts `../../../bin/heckle Doubler double --tests test/test_doubler_with_a_number.rb`
   end
 end
 

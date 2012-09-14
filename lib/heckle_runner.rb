@@ -16,7 +16,7 @@ class HeckleRunner
       :nodes => Heckle::MUTATABLE_NODES,
       :debug => false,
       :focus => false,
-      :timeout => 101001010101010,
+      :timeout => 5,
       :test_pattern => 'test/test_*.rb',
     }
 
@@ -110,7 +110,9 @@ class HeckleRunner
     # TODO: This doesn't work.
     def tests_pass?
       silence do
-        !@tu.run
+        @tu.run_tests
+
+        (@tu.errors + @tu.failures) == 0
       end
     end
 

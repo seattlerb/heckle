@@ -32,7 +32,7 @@ class TestHeckleRunnerRun < MiniTest::Unit::TestCase
     MiniTest::Unit.output = $stdout
   end
 
-  def test_run_with_full_test_coverage
+  def test_run_with_full_coverage
     out, _ = capture_io do
       HeckleRunner.run %w[Doubler double]
     end
@@ -42,9 +42,10 @@ class TestHeckleRunnerRun < MiniTest::Unit::TestCase
 
   def test_run_with_partial_coverage
     out, _ = capture_io do
-      HeckleRunner.run %w[Doubler double --tests "test/test_doubler_with_a_number.rb"]
+      HeckleRunner.run %w[Doubler double --tests test/test_doubler_with_a_number.rb]
     end
 
-    refute_match %r{No mutants survived.}, out
+    assert_match %r{The following mutations didn't cause test failures:}, out
+    refute_match %{No mutants survived.}, out
   end
 end
