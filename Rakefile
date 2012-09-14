@@ -12,8 +12,6 @@ Hoe.add_include_dirs("../../ParseTree/dev/lib",
                      "../../ruby_parser/2.3.1/lib",
                      "lib")
 
-Hoe.plugin :seattlerb
-
 Hoe.spec 'heckle' do
   developer 'Ryan Davis', 'ryand-ruby@zenspider.com'
   developer 'Eric Hodel', 'drbrain@segment7.net'
@@ -26,10 +24,14 @@ Hoe.spec 'heckle' do
   dependency 'ruby_parser', '~> 2.3.1'
   dependency 'ruby2ruby', '~> 1.3.0'
   dependency 'ZenTest',   '~> 4.7.0'
+  extra_dev_deps << ['minitest', '~> 2.3.0']
 
   multiruby_skip << "1.9" << "trunk"
 
   self.test_globs = ["test/test_*.rb"]
+
+  self.testlib = :minitest
+  self.test_prelude = 'gem "minitest"'
 end
 
 # vim: syntax=ruby
