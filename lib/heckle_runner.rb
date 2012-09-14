@@ -1,6 +1,5 @@
 require 'optparse'
 require 'heckle'
-require 'minitest_heckler'
 
 class HeckleRunner
   def self.run argv=ARGV
