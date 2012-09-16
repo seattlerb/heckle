@@ -86,6 +86,12 @@ class HeckleRunner
       end
     end.parse! argv
 
+    p options if options[:debug]
+
+    # TODO: Pass options to Heckle's initializer instead.
+    Heckle.debug = @options[:debug]
+    Heckle.timeout = @options[:timeout]
+
     options
   end
 
@@ -104,26 +110,32 @@ class HeckleRunner
   class MiniTestHeckler < Heckle
     def initialize(class_or_module, method, nodes)
       super
-      @tu = MiniTest::Unit.new
     end
 
-    # TODO: This doesn't work.
     def tests_pass?
       silence do
-        @tu.run_tests
+        MiniTest::Unit.runner = nil
 
-        (@tu.errors + @tu.failures) == 0
+        result = MiniTest::Unit.new.run
+
+        p MiniTest::Unit.runner if Heckle.debug
+
+        result == 0
       end
     end
 
     # TODO: Windows.
     def silence
-      original = MiniTest::Unit.output
-      MiniTest::Unit.output = File.open("/dev/null", "w")
+      return yield if Heckle.debug
 
-      yield
-    ensure
-      MiniTest::Unit.output = original
+      begin
+        original = MiniTest::Unit.output
+        MiniTest::Unit.output = File.open("/dev/null", "w")
+
+        yield
+      ensure
+        MiniTest::Unit.output = original
+      end
     end
   end
 end
