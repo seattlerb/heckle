@@ -22,7 +22,6 @@ class TestHeckleRunnerRun < MiniTest::Unit::TestCase
     # See MiniTest's test/minitest/metametameta.rb
     @output = StringIO.new("")
     MiniTest::Unit::TestCase.reset
-    MiniTest::Unit.runner = nil
     MiniTest::Unit.output = @output
   end
 
@@ -30,6 +29,10 @@ class TestHeckleRunnerRun < MiniTest::Unit::TestCase
     super
     Dir.chdir @old_pwd
     MiniTest::Unit.output = $stdout
+
+    MiniTest::Unit::TestCase.test_suites.each do |test|
+      Object.send :remove_const, test.to_s.to_sym
+    end
   end
 
   def test_run_with_full_coverage

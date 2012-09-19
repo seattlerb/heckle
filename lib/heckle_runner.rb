@@ -89,8 +89,8 @@ class HeckleRunner
     p options if options[:debug]
 
     # TODO: Pass options to Heckle's initializer instead.
-    Heckle.debug = @options[:debug]
-    Heckle.timeout = @options[:timeout]
+    Heckle.debug = options[:debug]
+    Heckle.timeout = options[:timeout]
 
     options
   end
@@ -102,7 +102,7 @@ class HeckleRunner
   end
 
   def run
-    Dir.glob(@options[:test_pattern]).each {|t| require File.expand_path(t) }
+    Dir.glob(@options[:test_pattern]).each {|t| load File.expand_path(t) }
 
     MiniTestHeckler.new(@class_or_module, @method, @options[:nodes]).validate
   end
@@ -116,11 +116,11 @@ class HeckleRunner
       silence do
         MiniTest::Unit.runner = nil
 
-        result = MiniTest::Unit.new.run
+        MiniTest::Unit.new.run
 
-        p MiniTest::Unit.runner if Heckle.debug
+        runner = MiniTest::Unit.runner
 
-        result == 0
+        runner.failures == 0 && runner.errors == 0
       end
     end
 
