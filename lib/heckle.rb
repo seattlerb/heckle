@@ -13,14 +13,6 @@ end
 
 class Sexp
   # REFACTOR: move to sexp.rb
-  def deep_each(&block)
-    self.each_sexp do |sexp|
-      block[sexp]
-      sexp.deep_each(&block)
-    end
-  end
-
-  # REFACTOR: move to sexp.rb
   def each_sexp
     self.each do |sexp|
       next unless Sexp === sexp
@@ -150,7 +142,7 @@ class Heckle < SexpProcessor
 
     @mutated = false
 
-    @original_tree = rewrite find_class_and_method
+    @original_tree = rewrite find_scope_and_method
     @current_tree = @original_tree.deep_clone
 
     grab_mutatees
@@ -526,8 +518,8 @@ class Heckle < SexpProcessor
   end
 
   # Copied from Flay#process
-  def find_class_and_method
-    expand_dirs_to_files('.').each do |file|
+  def find_scope_and_method
+    expand_dirs_to_files.each do |file|
       #warn "Processing #{file}" if option[:verbose]
 
       ext = File.extname(file).sub(/^\./, '')
@@ -550,7 +542,7 @@ class Heckle < SexpProcessor
 
         next unless sexp
 
-        found = process_sexp sexp
+        found = find_scope sexp
 
         return found if found
       rescue SyntaxError => e
@@ -565,31 +557,55 @@ class Heckle < SexpProcessor
     RubyParser.new.process(File.read(file), file)
   end
 
-  def process_sexp pt
-    class_method = method_name.to_s =~ /^self\./
-    clean_name = method_name.to_s.sub(/^self\./, '').to_sym
+  def find_scope sexp, nesting=nil
+    nesting ||= klass_name.split("::").map {|k| k.to_sym }
+    current, *nesting = nesting
 
-    if pt[0] == :class && pt[1] == klass_name.to_sym
-      return pt if method_name.nil?
+    sexp = s(:block, sexp) unless sexp.first == :block
 
-      pt.deep_each do |node|
-        if class_method
-          return node if node[0] == :defs && node[2] == clean_name
-        else
-          return node if node[0] == :defn && node[1] == clean_name
-        end
+    sexp.each_sexp do |node|
+      next unless [:class, :module].include? node.first
+      next unless node[1] == current
+
+      block = node.detect {|s| Sexp === s && s[0] == :scope }[1]
+
+      if nesting.empty?
+        return sexp if method_name.nil?
+
+        m = find_method block
+
+        return m if m
+      else
+        s =  find_scope block, nesting
+
+        return s if s
       end
     end
 
     nil
   end
 
-  def expand_dirs_to_files *dirs
-    extensions = ['rb'] # + Flay.load_plugins
+  def find_method sexp
+    class_method = method_name.to_s =~ /^self\./
+    clean_name = method_name.to_s.sub(/^self\./, '').to_sym
 
-    dirs.flatten.map { |p|
+    sexp = s(:block, sexp) unless sexp.first == :block
+
+    sexp.each_sexp do |node|
+      if class_method
+        return node if node[0] == :defs && node[2] == clean_name
+      else
+        return node if node[0] == :defn && node[1] == clean_name
+      end
+    end
+
+    nil
+  end
+
+  def expand_dirs_to_files(dirs='.')
+    Array(dirs).flatten.map { |p|
       if File.directory? p then
-        Dir[File.join(p, '**', "*.{#{extensions.join(',')}}")]
+        Dir[File.join(p, '**', "*.rb")]
       else
         p
       end
@@ -690,7 +706,7 @@ class Heckle < SexpProcessor
   end
 
   def current_code
-    Ruby2Ruby.new.process ParseTree.translate(klass_name.to_class, method_name)
+    Ruby2Ruby.new.process current_tree
   end
 
   ##
