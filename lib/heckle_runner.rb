@@ -1,5 +1,6 @@
 require 'optparse'
 require 'heckle'
+require 'minitest_heckler'
 
 class HeckleRunner
   def self.run argv=ARGV
@@ -95,6 +96,11 @@ class HeckleRunner
     options
   end
 
+  # TODO: this sucks
+  def heckler
+    MiniTestHeckler
+  end
+
   def initialize class_or_module, method, options={}
     @class_or_module = class_or_module
     @method = method
@@ -102,40 +108,6 @@ class HeckleRunner
   end
 
   def run
-    Dir.glob(@options[:test_pattern]).each {|t| load File.expand_path(t) }
-
-    MiniTestHeckler.new(@class_or_module, @method, @options[:nodes]).validate
-  end
-
-  class MiniTestHeckler < Heckle
-    def initialize(class_or_module, method, nodes)
-      super
-    end
-
-    def tests_pass?
-      silence do
-        MiniTest::Unit.runner = nil
-
-        MiniTest::Unit.new.run
-
-        runner = MiniTest::Unit.runner
-
-        runner.failures == 0 && runner.errors == 0
-      end
-    end
-
-    # TODO: Windows.
-    def silence
-      return yield if Heckle.debug
-
-      begin
-        original = MiniTest::Unit.output
-        MiniTest::Unit.output = File.open("/dev/null", "w")
-
-        yield
-      ensure
-        MiniTest::Unit.output = original
-      end
-    end
+    heckler.new(@class_or_module, @method, @options).validate
   end
 end
