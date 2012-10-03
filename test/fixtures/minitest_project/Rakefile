@@ -1,0 +1,17 @@
+require 'rake/testtask'
+
+Rake::TestTask.new
+
+namespace :heckle do
+  desc "Run heckle with all tests."
+  task :pass do
+    puts `../../../bin/heckle Doubler double`
+  end
+
+  desc "Run heckle with some test."
+  task :fail do
+    puts `../../../bin/heckle Doubler double --tests test/test_doubler_with_a_number.rb`
+  end
+end
+
+task :default => :test
