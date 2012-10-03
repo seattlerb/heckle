@@ -32,7 +32,7 @@ class Heckle < SexpProcessor
   ##
   # The version of Heckle you are using.
 
-  VERSION = '1.4.3'
+  VERSION = '2.0.0.b1'
 
   ##
   # Branch node types.

@@ -1,3 +1,19 @@
+=== 2.0.0.b1 / 2012-10-02
+
+* 1 major enhancement:
+
+  * Hot damn! It works with ruby_parser!!! (phiggins)
+
+* 1 minor enhancement:
+
+  * 1.9 support! (phiggins)
+
+* 3 bug fixes:
+
+  * Fixed Ruby2Ruby usage (raggi)
+  * Fixed dependencies so heckle doesn't use ruby_parser 3 and friends.
+  * Fixed grammar in description.  Reported by Jean Lange.
+
 === 1.4.3 / 2009-06-23
 
 * 2 minor enhancements:
