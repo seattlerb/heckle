@@ -183,7 +183,7 @@ class Heckle < SexpProcessor
       reset_tree
       begin
         process current_tree
-        timeout(@@timeout, Heckle::Timeout) { run_tests }
+        ::Timeout::timeout(@@timeout, Heckle::Timeout) { run_tests }
       rescue SyntaxError => e
         @reporter.warning "Mutation caused a syntax error:\n\n#{e.message}}"
       rescue Heckle::Timeout
