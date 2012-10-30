@@ -147,12 +147,12 @@ class HeckleDummy
 
   def uses_nothing
   end
-  
+
   def uses_iter
     x = [ 1, 2, 3 ]
     x.each { |y| y }
   end
-  
+
   def self.is_a_klass_method?
     true
   end
