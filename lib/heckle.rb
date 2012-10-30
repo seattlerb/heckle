@@ -11,17 +11,6 @@ class String # :nodoc:
   end
 end
 
-class Sexp
-  # REFACTOR: move to sexp.rb
-  def each_sexp
-    self.each do |sexp|
-      next unless Sexp === sexp
-
-      yield sexp
-    end
-  end
-end
-
 ##
 # Test Unit Sadism
 
@@ -818,8 +807,6 @@ class Heckle < SexpProcessor
         Tempfile.open("fail") do |b|
           b.puts(mutation)
           b.flush
-
-          diff_flags = " "
 
           output = `#{Heckle::DIFF} -U #{length} --label original #{a.path} --label mutation #{b.path}`
           puts output.sub(/^@@.*?\n/, '')
