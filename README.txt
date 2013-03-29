@@ -16,7 +16,7 @@ It's like hiring a white-hat hacker to try to break into your server and making 
 * Able to mutate entire classes, or individual methods
 * Can not yet mutate class methods
 
-== SYNOPSYS:
+== SYNOPSIS:
 
     % heckle -v Autotest
 
