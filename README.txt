@@ -1,7 +1,7 @@
 = heckle
 
 home :: http://ruby.sadi.st/Heckle.html
-repo :: https://github.com/seattlerb/heckle
+code :: https://github.com/seattlerb/heckle
 rdoc :: http://seattlerb.rubyforge.org/heckle
 
 == DESCRIPTION:
