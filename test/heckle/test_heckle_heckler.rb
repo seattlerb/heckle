@@ -1,7 +1,8 @@
+require 'minitest/autorun'
 require 'fixtures/heckle_dummy'
 require 'heckle'
 
-class TestHeckler < Heckle
+class TestHeckler < Heckle::Heckler
   def rand(*args)
     5
   end
@@ -27,7 +28,7 @@ end
 class HeckleTestCase < MiniTest::Unit::TestCase
   def setup
     @klass ||= "HeckleDummy"
-    @nodes ||= Heckle::MUTATABLE_NODES
+    @nodes ||= Heckle::Heckler::MUTATABLE_NODES
     @method_heckled ||= 'uses_many_things'
 
     @heckler = TestHeckler.new(@klass, @method_heckled, @nodes)
@@ -58,7 +59,7 @@ class HeckleTestCase < MiniTest::Unit::TestCase
   end
 end
 
-class TestHeckle < HeckleTestCase
+class TestHeckleHeckler < HeckleTestCase
   def test_should_set_original_tree
     expected = s(:defn, :uses_many_things,
                  s(:args),

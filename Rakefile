@@ -27,7 +27,7 @@ Hoe.spec 'heckle' do
 
   multiruby_skip << "1.9" << "trunk"
 
-  self.test_globs = ["test/test_*.rb"]
+  self.test_globs = ["test/heckle/test_*.rb"]
 
   self.testlib = :minitest
 end

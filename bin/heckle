@@ -1,8 +1,7 @@
 #!/usr/bin/env ruby
 
-$LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
-$LOAD_PATH << 'lib'
+$LOAD_PATH << File.join(File.expand_path(File.dirname(__FILE__), '..', 'lib'))
 
-require 'heckle_runner'
+require 'heckle/runner'
 
-exit HeckleRunner.run
+exit Heckle::Runner.run

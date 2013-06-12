@@ -1,5 +1,6 @@
 require 'minitest/autorun'
-require 'heckle_runner'
+require 'heckle'
+require 'heckle/runner'
 
 # Tests needed:
 # * if no method, loads all local methods
@@ -37,7 +38,7 @@ class TestHeckleRunnerRun < MiniTest::Unit::TestCase
 
   def test_run_with_full_coverage
     out, _ = capture_io do
-      HeckleRunner.run %w[Doubler double]
+      Heckle::Runner.run %w[Doubler double]
     end
 
     assert_match %r{No mutants survived.}, out
@@ -45,7 +46,7 @@ class TestHeckleRunnerRun < MiniTest::Unit::TestCase
 
   def test_run_with_partial_coverage
     out, _ = capture_io do
-      HeckleRunner.run %w[Doubler double --tests test/test_doubler_with_a_number.rb]
+      Heckle::Runner.run %w[Doubler double --tests test/test_doubler_with_a_number.rb]
     end
 
     assert_match %r{The following mutations didn't cause test failures:}, out
