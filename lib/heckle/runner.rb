@@ -5,21 +5,21 @@ require 'heckle/minitest_heckler'
 module Heckle
   class Runner
     def self.run argv=ARGV
-      options = parse_args argv
+      options = parse_args argv, argv.shift, argv.shift
 
-      class_or_module, method = argv.shift, argv.shift
-
-      new(class_or_module, method, options).run
+      new(options).run
     end
 
-    def self.parse_args argv
+    def self.parse_args argv, klass_name, method_name
       options = {
         :force => false,
         :nodes => Heckle::Heckler::MUTATABLE_NODES,
         :debug => false,
         :focus => false,
         :timeout => 5,
-        :test_pattern => 'test/test_*.rb',
+        :test_pattern => 'test/**/{test_*,*_test}.rb',
+        :klass_name => klass_name,
+        :method_name => method_name
       }
 
       OptionParser.new do |opts|
@@ -86,9 +86,15 @@ module Heckle
           options[:nodes] = options[:nodes] - exclusions
           puts "Mutating without nodes: #{exclusions.inspect}"
         end
-      end.parse! argv
 
-      p options if options[:debug]
+        opts.parse! argv
+
+        unless options[:klass_name] && options[:method_name]
+          p options
+          p opts
+          abort "need a class name and method name"
+        end
+      end
 
       # TODO: Pass options to Heckle's initializer instead.
       #Heckle.debug = options[:debug]
@@ -102,14 +108,12 @@ module Heckle
       MiniTestHeckler
     end
 
-    def initialize class_or_module, method, options={}
-      @class_or_module = class_or_module
-      @method = method
+    def initialize options={}
       @options = options
     end
 
     def run
-      heckler.new(@class_or_module, @method, @options).validate
+      heckler.new(@options).validate
     end
   end
 end

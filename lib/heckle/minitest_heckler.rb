@@ -1,9 +1,11 @@
 module Heckle
   class MiniTestHeckler < Heckle::Heckler
-    def initialize(class_or_module, method, options)
+    def initialize(options={})
+      $LOAD_PATH << 'lib' << 'test'
+
       Dir.glob(options[:test_pattern]).each {|t| load File.expand_path(t) }
 
-      super(class_or_module, method, options[:nodes])
+      super
     end
 
     def tests_pass?

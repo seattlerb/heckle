@@ -100,17 +100,18 @@ module Heckle
     # Creates a new Heckle that will heckle +klass_name+ and +method_name+,
     # sending results to +reporter+.
 
-    def initialize(klass_name = nil, method_name = nil,
-                   nodes = Heckle::Heckler::MUTATABLE_NODES, reporter = Reporter.new)
+    def initialize(options={})
       super()
 
+      klass_name = options[:klass_name]
       @klass_name = klass_name
-      @method_name = method_name.intern if method_name
-
       @klass = klass_name.to_class
 
+      method_name = options[:method_name]
+      @method_name = method_name.intern if method_name
+
       @method = nil
-      @reporter = reporter
+      @reporter = options[:reporter] || Reporter.new
 
       self.strict = false
       self.auto_shift_type = true
@@ -121,7 +122,7 @@ module Heckle
       @node_count = Hash.new 0
       @count = 0
 
-      @mutatable_nodes = nodes
+      @mutatable_nodes = options[:nodes] || Heckle::Heckler::MUTATABLE_NODES
       @mutatable_nodes.each {|type| @mutatees[type] = [] }
 
       @failures = []

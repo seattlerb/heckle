@@ -28,10 +28,14 @@ end
 class HeckleTestCase < MiniTest::Unit::TestCase
   def setup
     @klass ||= "HeckleDummy"
-    @nodes ||= Heckle::Heckler::MUTATABLE_NODES
-    @method_heckled ||= 'uses_many_things'
+    @nodes ||= nil
+    @method_name ||= 'uses_many_things'
 
-    @heckler = TestHeckler.new(@klass, @method_heckled, @nodes)
+    @heckler = TestHeckler.new(
+      :klass_name => @klass,
+      :method_name => @method_name,
+      :nodes => @nodes
+    )
   end
 
   def teardown
@@ -193,7 +197,7 @@ end
 
 class TestHeckleNumericLiterals < HeckleTestCase
   def setup
-    @method_heckled = "uses_numeric_literals"
+    @method_name = "uses_numeric_literals"
     @nodes = s(:lit, :str)
     super
   end
@@ -245,7 +249,7 @@ end
 
 class TestHeckleSymbols < HeckleTestCase
   def setup
-    @method_heckled = "uses_symbols"
+    @method_name = "uses_symbols"
     @nodes = s(:lit, :str)
     super
   end
@@ -293,7 +297,7 @@ end
 
 class TestHeckleRegexes < HeckleTestCase
   def setup
-    @method_heckled = "uses_regexes"
+    @method_name = "uses_regexes"
     @nodes = s(:lit, :str)
     super
   end
@@ -341,7 +345,7 @@ end
 
 class TestHeckleRanges < HeckleTestCase
   def setup
-    @method_heckled = "uses_ranges"
+    @method_name = "uses_ranges"
     @nodes = s(:lit, :str)
     super
   end
@@ -390,7 +394,7 @@ end
 
 class TestHeckleSameLiteral < HeckleTestCase
   def setup
-    @method_heckled = "uses_same_literal"
+    @method_name = "uses_same_literal"
     @nodes = s(:lit, :str)
     super
   end
@@ -438,7 +442,7 @@ end
 
 class TestHeckleStrings < HeckleTestCase
   def setup
-    @method_heckled = "uses_strings"
+    @method_name = "uses_strings"
     @nodes = s(:lit, :str)
     super
   end
@@ -486,7 +490,7 @@ end
 
 class TestHeckleIf < HeckleTestCase
   def setup
-    @method_heckled = "uses_if"
+    @method_name = "uses_if"
     @nodes = s(:if)
     super
   end
@@ -532,7 +536,7 @@ end
 
 class TestHeckleBoolean < HeckleTestCase
   def setup
-    @method_heckled = "uses_boolean"
+    @method_name = "uses_boolean"
     @nodes = s(:true, :false)
     super
   end
@@ -570,7 +574,7 @@ end
 
 class TestHeckleWhile < HeckleTestCase
   def setup
-    @method_heckled = "uses_while"
+    @method_name = "uses_while"
     @nodes = s(:while)
     super
   end
@@ -601,7 +605,7 @@ end
 
 class TestHeckleUntil < HeckleTestCase
   def setup
-    @method_heckled = "uses_until"
+    @method_name = "uses_until"
     @nodes = s(:until)
     super
   end
@@ -632,7 +636,7 @@ end
 
 class TestHeckleCall < HeckleTestCase
   def setup
-    @method_heckled = "uses_call"
+    @method_name = "uses_call"
     super
   end
 
@@ -680,7 +684,7 @@ end
 
 class TestHeckleCallblock < HeckleTestCase
   def setup
-    @method_heckled = "uses_callblock"
+    @method_name = "uses_callblock"
     @nodes = s(:call)
     super
   end
@@ -715,7 +719,7 @@ end
 
 class TestHeckleClassMethod < HeckleTestCase
   def setup
-    @method_heckled = "self.is_a_klass_method?"
+    @method_name = "self.is_a_klass_method?"
     @nodes = s(:true)
     super
   end
@@ -745,7 +749,7 @@ end
 
 class TestHeckleCvasgn < HeckleTestCase
   def setup
-    @method_heckled = "uses_cvasgn"
+    @method_name = "uses_cvasgn"
     @nodes = s(:cvasgn)
     super
   end
@@ -783,7 +787,7 @@ end
 
 class TestHeckleIasgn < HeckleTestCase
   def setup
-    @method_heckled = "uses_iasgn"
+    @method_name = "uses_iasgn"
     @nodes = s(:iasgn)
     super
   end
@@ -822,7 +826,7 @@ end
 
 class TestHeckleGasgn < HeckleTestCase
   def setup
-    @method_heckled = "uses_gasgn"
+    @method_name = "uses_gasgn"
       s(:defn, :uses_cvasgn,
         s(:args),
         s(:scope,
@@ -867,7 +871,7 @@ end
 
 class TestHeckleLasgn < HeckleTestCase
   def setup
-    @method_heckled = "uses_lasgn"
+    @method_name = "uses_lasgn"
     @nodes = s(:lasgn)
     super
   end
@@ -905,7 +909,7 @@ end
 
 class TestHeckleMasgn < HeckleTestCase
   def setup
-    @method_heckled = "uses_masgn"
+    @method_name = "uses_masgn"
     @nodes = s(:dasgn, :dasgn_curr, :iasgn, :gasgn, :lasgn)
     super
   end
@@ -954,7 +958,7 @@ end
 
 class TestHeckleIter < HeckleTestCase
   def setup
-    @method_heckled = "uses_iter"
+    @method_name = "uses_iter"
     @nodes = [ :call, :lasgn ]
     super
   end
@@ -1001,7 +1005,7 @@ end
 class TestHeckleFindsNestedClassAndModule < HeckleTestCase
   def setup
     @klass = "HeckleDummy::OuterNesting::InnerNesting::InnerClass"
-    @method_heckled = "foo"
+    @method_name = "foo"
     @nodes = []
     super
   end

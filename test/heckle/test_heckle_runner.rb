@@ -12,8 +12,6 @@ class TestHeckleRunnerRun < MiniTest::Unit::TestCase
   @@dummy_dir = File.expand_path('test/fixtures/minitest_project')
   dummy_lib = File.join(@@dummy_dir, 'lib')
 
-  $LOAD_PATH << dummy_lib
-
   def setup
     super
 
