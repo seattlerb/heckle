@@ -1,3 +1,8 @@
+begin
+  gem 'minitest'
+rescue Gem::LoadError
+end
+
 require 'minitest/unit'
 
 if MiniTest::Unit.respond_to?(:autorun)
@@ -13,7 +18,7 @@ module Heckle
       $LOAD_PATH << 'lib'
       $LOAD_PATH << 'test'
 
-      Dir.glob(options[:test_pattern]).each {|t| load t }
+      Dir.glob(options[:test_pattern]).uniq.each {|t| load t }
 
       super
     end
