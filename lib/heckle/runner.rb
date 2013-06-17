@@ -87,6 +87,10 @@ module Heckle
           puts "Mutating without nodes: #{exclusions.inspect}"
         end
 
+        opts.on("-I", "--include INCLUDES", "specify $LOAD_PATH directories") do |opt|
+          opt.split(":").each {|dir| $LOAD_PATH << dir }
+        end
+
         opts.parse! argv
 
         unless options[:klass_name] && options[:method_name]
