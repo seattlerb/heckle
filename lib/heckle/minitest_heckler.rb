@@ -1,9 +1,19 @@
+require 'minitest/unit'
+
+if MiniTest::Unit.respond_to?(:autorun)
+  class MiniTest::Unit
+    def self.autorun
+    end
+  end
+end
+
 module Heckle
   class MiniTestHeckler < Heckle::Heckler
     def initialize(options={})
-      $LOAD_PATH << 'lib' << 'test'
+      $LOAD_PATH << 'lib'
+      $LOAD_PATH << 'test'
 
-      Dir.glob(options[:test_pattern]).each {|t| load File.expand_path(t) }
+      Dir.glob(options[:test_pattern]).each {|t| load t }
 
       super
     end
