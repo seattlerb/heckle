@@ -4,17 +4,6 @@ class String # :nodoc:
   end
 end
 
-class Sexp
-  # REFACTOR: move to sexp.rb
-  def each_sexp
-    self.each do |sexp|
-      next unless Sexp === sexp
-
-      yield sexp
-    end
-  end
-end
-
 ##
 # Test Unit Sadism
 
@@ -234,9 +223,10 @@ module Heckle
     def process_call(exp)
       recv = process(exp.shift)
       meth = exp.shift
-      args = process(exp.shift)
+      args = exp.map {|n| process(n) }
+      exp.clear
 
-      mutate_node s(:call, recv, meth, args)
+      mutate_node s(:call, recv, meth, *args)
     end
 
     ##
@@ -292,11 +282,16 @@ module Heckle
 
     def process_asgn(type, exp)
       var = exp.shift
-      if exp.empty? then
-        mutate_node s(type, var)
-      else
-        mutate_node s(type, var, process(exp.shift))
-      end
+      args = exp.map {|n| process(n) }
+      exp.clear
+
+      #if exp.empty? then
+      #  mutate_node s(type, var)
+      #else
+      #  mutate_node s(type, var, process(exp.shift))
+      #end
+
+      mutate_node s(type, var, *args)
     end
 
     def mutate_asgn(node)
@@ -548,45 +543,32 @@ module Heckle
       nesting ||= klass_name.split("::").map {|k| k.to_sym }
       current, *nesting = nesting
 
-      sexp = s(:block, sexp) unless sexp.first == :block
-
       sexp.each_sexp do |node|
-        next unless [:class, :module].include? node.first
-        next unless node[1] == current
-
-        block = node.detect {|s| Sexp === s && s[0] == :scope }[1]
-
         if nesting.empty?
-          return sexp if method_name.nil?
-
-          m = find_method block
-
-          return m if m
+          return node if method_match?(method_name, node)
         else
-          s =  find_scope block, nesting
-
-          return s if s
+          return node if scope_match?(current, node)
         end
       end
 
       nil
     end
 
-    def find_method sexp
+    def scope_match?(name, node)
+      [:class, :module].include?(node[0]) && node[1] == name
+    end
+
+    def method_match?(name, node)
       class_method = method_name.to_s =~ /^self\./
       clean_name = method_name.to_s.sub(/^self\./, '').to_sym
 
-      sexp = s(:block, sexp) unless sexp.first == :block
-
-      sexp.each_sexp do |node|
-        if class_method
-          return node if node[0] == :defs && node[2] == clean_name
-        else
-          return node if node[0] == :defn && node[1] == clean_name
-        end
+      if class_method
+        return true if node[0] == :defs && node[2] == clean_name
+      else
+        return true if node[0] == :defn && node[1] == clean_name
       end
 
-      nil
+      false
     end
 
     def expand_dirs_to_files(dirs='.')

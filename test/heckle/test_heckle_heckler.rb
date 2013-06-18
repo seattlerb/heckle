@@ -26,6 +26,11 @@ class TestHeckler < Heckle::Heckler
 end
 
 class HeckleTestCase < MiniTest::Unit::TestCase
+  require 'pp'
+  def mu_pp(o)
+    o.pretty_inspect
+  end
+
   def setup
     @klass ||= "HeckleDummy"
     @nodes ||= nil
@@ -56,10 +61,13 @@ class HeckleTestCase < MiniTest::Unit::TestCase
     mutations.delete(initial)
 
     # HAX: Sorting an array of Sexps blows up in some cases.
-    assert_equal expected.map {|sexp| sexp.to_s }.sort,
-      mutations.map {|sexp| sexp.to_s }.sort,
-      [ "expected(#{expected.size}):", (expected - mutations).map {|m| m.pretty_inspect},
-        "mutations(#{mutations.size}):", (mutations - expected).map {|m| m.pretty_inspect} ].join("\n")
+    assert_equal expected.map {|s| s.to_s}.sort, mutations.map {|s| s.to_s}.sort,
+      [
+        "expected(#{expected.size}):",
+        (expected - mutations).map {|m| m.inspect},
+        "mutations(#{mutations.size}):",
+        (mutations - expected).map {|m| m.inspect}
+      ].join("\n")
   end
 end
 
@@ -67,23 +75,21 @@ class TestHeckleHeckler < HeckleTestCase
   def test_should_set_original_tree
     expected = s(:defn, :uses_many_things,
                  s(:args),
-                 s(:scope,
+                 s(:lasgn, :i, s(:lit, 1)),
+                 s(:while,
+                   s(:call, s(:lvar, :i), :<, s(:lit, 10)),
                    s(:block,
-                     s(:lasgn, :i, s(:lit, 1)),
-                     s(:while,
-                       s(:call, s(:lvar, :i), :<, s(:arglist, s(:lit, 10))),
-                       s(:block,
-                         s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:arglist, s(:lit, 1)))),
-                         s(:until, s(:call, nil, :some_func, s(:arglist)),
-                           s(:call, nil, :some_other_func, s(:arglist)), true),
-                         s(:if,
-                           s(:call, s(:str, "hi there"), :==,
-                             s(:arglist, s(:str, "changeling"))),
+                     s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:lit, 1))),
+                     s(:until, s(:call, nil, :some_func),
+                       s(:call, nil, :some_other_func), true),
+                       s(:if,
+                         s(:call, s(:str, "hi there"), :==,
+                           s(:str, "changeling")),
                            s(:return, s(:true)),
                            nil),
-                         s(:return, s(:false))),
-                       true),
-                     s(:lvar, :i))))
+                           s(:return, s(:false))),
+                           true),
+                           s(:lvar, :i))
 
     assert_equal expected, @heckler.original_tree
   end
@@ -91,12 +97,12 @@ class TestHeckleHeckler < HeckleTestCase
   def test_should_grab_mutatees_from_method
     # expected is from tree of uses_while
     expected = {
-      :call => [s(:call, s(:lvar, :i), :<, s(:arglist, s(:lit, 10))),
-                s(:call, s(:lvar, :i), :+, s(:arglist, s(:lit, 1))),
-                s(:call, nil, :some_func, s(:arglist)), # FIX: why added?
-                s(:call, nil, :some_other_func, s(:arglist)), # FIX: why added?
+      :call => [s(:call, s(:lvar, :i), :<, s(:lit, 10)),
+                s(:call, s(:lvar, :i), :+, s(:lit, 1)),
+                s(:call, nil, :some_func), # FIX: why added?
+                s(:call, nil, :some_other_func), # FIX: why added?
                 s(:call, s(:str, "hi there"), :==,
-                  s(:arglist, s(:str, "changeling")))],
+                  s(:str, "changeling"))],
       :cvasgn => [],     # no cvasgns here
       :dasgn => [],      # no dasgns here
       :dasgn_curr => [], # no dasgn_currs here
@@ -104,31 +110,31 @@ class TestHeckleHeckler < HeckleTestCase
       :iter => [],
       :gasgn => [],      # no gasgns here
       :lasgn => [s(:lasgn, :i, s(:lit, 1)),
-                 s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:arglist, s(:lit, 1))))],
+                 s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:lit, 1)))],
       :lit => [s(:lit, 1), s(:lit, 10), s(:lit, 1)],
       :if => [s(:if,
-                s(:call, s(:str, "hi there"), :==, s(:arglist, s(:str, "changeling"))),
+                s(:call, s(:str, "hi there"), :==, s(:str, "changeling")),
                 s(:return, s(:true)),
                 nil)],
       :str => [s(:str, "hi there"), s(:str, "changeling")],
       :true => [s(:true)],
       :false => [s(:false)],
       :while => [s(:while,
-                   s(:call, s(:lvar, :i), :<, s(:arglist, s(:lit, 10))),
+                   s(:call, s(:lvar, :i), :<, s(:lit, 10)),
                    s(:block,
-                     s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:arglist, s(:lit, 1)))),
-                     s(:until, s(:call, nil, :some_func, s(:arglist)),
-                       s(:call, nil, :some_other_func, s(:arglist)), true),
+                     s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:lit, 1))),
+                     s(:until, s(:call, nil, :some_func),
+                       s(:call, nil, :some_other_func), true),
                      s(:if,
                        s(:call, s(:str, "hi there"), :==,
-                         s(:arglist, s(:str, "changeling"))),
+                         s(:str, "changeling")),
                        s(:return, s(:true)),
                        nil),
                      s(:return, s(:false))),
                    true)],
       :until => [s(:until,
-                   s(:call, nil, :some_func, s(:arglist)),
-                   s(:call, nil, :some_other_func, s(:arglist)),
+                   s(:call, nil, :some_func),
+                   s(:call, nil, :some_other_func),
                    true)],
     }
 
@@ -204,13 +210,10 @@ class TestHeckleNumericLiterals < HeckleTestCase
 
   def test_numeric_literals_original_tree
     expected = s(:defn, :uses_numeric_literals,
-      s(:args),
-      s(:scope,
-        s(:block,
-          s(:lasgn, :i, s(:lit, 1)),
-          s(:lasgn, :i, s(:call, s(:lvar, :i), :+,
-                          s(:arglist, s(:lit, 2147483648)))),
-          s(:lasgn, :i, s(:call, s(:lvar, :i), :-, s(:arglist, s(:lit, 3.5)))))))
+                 s(:args),
+                 s(:lasgn, :i, s(:lit, 1)),
+                 s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:lit, 2147483648))),
+                 s(:lasgn, :i, s(:call, s(:lvar, :i), :-, s(:lit, 3.5))))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -219,28 +222,19 @@ class TestHeckleNumericLiterals < HeckleTestCase
     expected = [
       s(:defn, :uses_numeric_literals,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, 6)),
-            s(:lasgn, :i, s(:call, s(:lvar, :i), :+,
-                            s(:arglist, s(:lit, 2147483648)))),
-            s(:lasgn, :i, s(:call, s(:lvar, :i), :-, s(:arglist, s(:lit, 3.5))))))),
+          s(:lasgn, :i, s(:lit, 6)),
+          s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:lit, 2147483648))),
+          s(:lasgn, :i, s(:call, s(:lvar, :i), :-, s(:lit, 3.5)))),
       s(:defn, :uses_numeric_literals,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, 1)),
-            s(:lasgn, :i, s(:call, s(:lvar, :i), :+,
-                            s(:arglist, s(:lit, 2147483653)))),
-            s(:lasgn, :i, s(:call, s(:lvar, :i), :-, s(:arglist, s(:lit, 3.5))))))),
+          s(:lasgn, :i, s(:lit, 1)),
+          s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:lit, 2147483653))),
+          s(:lasgn, :i, s(:call, s(:lvar, :i), :-, s(:lit, 3.5)))),
       s(:defn, :uses_numeric_literals,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, 1)),
-            s(:lasgn, :i, s(:call, s(:lvar, :i), :+,
-                            s(:arglist, s(:lit, 2147483648)))),
-            s(:lasgn, :i, s(:call, s(:lvar, :i), :-, s(:arglist, s(:lit, 8.5))))))),
+          s(:lasgn, :i, s(:lit, 1)),
+          s(:lasgn, :i, s(:call, s(:lvar, :i), :+, s(:lit, 2147483648))),
+          s(:lasgn, :i, s(:call, s(:lvar, :i), :-, s(:lit, 8.5)))),
     ]
 
     assert_mutations expected, @heckler
@@ -256,12 +250,10 @@ class TestHeckleSymbols < HeckleTestCase
 
   def test_symbols_original_tree
     expected = s(:defn, :uses_symbols,
-      s(:args),
-      s(:scope,
-        s(:block,
-          s(:lasgn, :i, s(:lit, :blah)),
-          s(:lasgn, :i, s(:lit, :blah)),
-          s(:lasgn, :i, s(:lit, :and_blah)))))
+                 s(:args),
+                 s(:lasgn, :i, s(:lit, :blah)),
+                 s(:lasgn, :i, s(:lit, :blah)),
+                 s(:lasgn, :i, s(:lit, :and_blah)))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -270,25 +262,19 @@ class TestHeckleSymbols < HeckleTestCase
     expected = [
       s(:defn, :uses_symbols,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, :"l33t h4x0r")),
-            s(:lasgn, :i, s(:lit, :blah)),
-            s(:lasgn, :i, s(:lit, :and_blah))))),
+          s(:lasgn, :i, s(:lit, :"l33t h4x0r")),
+          s(:lasgn, :i, s(:lit, :blah)),
+          s(:lasgn, :i, s(:lit, :and_blah))),
       s(:defn, :uses_symbols,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, :blah)),
-            s(:lasgn, :i, s(:lit, :"l33t h4x0r")),
-            s(:lasgn, :i, s(:lit, :and_blah))))),
+          s(:lasgn, :i, s(:lit, :blah)),
+          s(:lasgn, :i, s(:lit, :"l33t h4x0r")),
+          s(:lasgn, :i, s(:lit, :and_blah))),
       s(:defn, :uses_symbols,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, :blah)),
-            s(:lasgn, :i, s(:lit, :blah)),
-            s(:lasgn, :i, s(:lit, :"l33t h4x0r"))))),
+          s(:lasgn, :i, s(:lit, :blah)),
+          s(:lasgn, :i, s(:lit, :blah)),
+          s(:lasgn, :i, s(:lit, :"l33t h4x0r"))),
     ]
 
     assert_mutations expected, @heckler
@@ -304,12 +290,10 @@ class TestHeckleRegexes < HeckleTestCase
 
   def test_regexes_original_tree
     expected = s(:defn, :uses_regexes,
-      s(:args),
-      s(:scope,
-        s(:block,
-          s(:lasgn, :i, s(:lit, /a.*/)),
-          s(:lasgn, :i, s(:lit, /c{2,4}+/)),
-          s(:lasgn, :i, s(:lit, /123/)))))
+                 s(:args),
+                 s(:lasgn, :i, s(:lit, /a.*/)),
+                 s(:lasgn, :i, s(:lit, /c{2,4}+/)),
+                 s(:lasgn, :i, s(:lit, /123/)))
 
     assert_equal expected, @heckler.original_tree
   end
@@ -318,25 +302,19 @@ class TestHeckleRegexes < HeckleTestCase
     expected = [
       s(:defn, :uses_regexes,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, /l33t\ h4x0r/)),
-            s(:lasgn, :i, s(:lit, /c{2,4}+/)),
-            s(:lasgn, :i, s(:lit, /123/))))),
+          s(:lasgn, :i, s(:lit, /l33t\ h4x0r/)),
+          s(:lasgn, :i, s(:lit, /c{2,4}+/)),
+          s(:lasgn, :i, s(:lit, /123/))),
       s(:defn, :uses_regexes,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, /a.*/)),
-            s(:lasgn, :i, s(:lit, /l33t\ h4x0r/)),
-            s(:lasgn, :i, s(:lit, /123/))))),
+          s(:lasgn, :i, s(:lit, /a.*/)),
+          s(:lasgn, :i, s(:lit, /l33t\ h4x0r/)),
+          s(:lasgn, :i, s(:lit, /123/))),
       s(:defn, :uses_regexes,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, /a.*/)),
-            s(:lasgn, :i, s(:lit, /c{2,4}+/)),
-            s(:lasgn, :i, s(:lit, /l33t\ h4x0r/))))),
+          s(:lasgn, :i, s(:lit, /a.*/)),
+          s(:lasgn, :i, s(:lit, /c{2,4}+/)),
+          s(:lasgn, :i, s(:lit, /l33t\ h4x0r/))),
     ]
 
     assert_mutations expected, @heckler
@@ -352,12 +330,10 @@ class TestHeckleRanges < HeckleTestCase
 
   def test_ranges_original_tree
     expected = s(:defn, :uses_ranges,
-      s(:args),
-      s(:scope,
-        s(:block,
-          s(:lasgn, :i, s(:lit, 6..100)),
-          s(:lasgn, :i, s(:lit, -1..9)),
-          s(:lasgn, :i, s(:lit, 1..4)))))
+                 s(:args),
+                 s(:lasgn, :i, s(:lit, 6..100)),
+                 s(:lasgn, :i, s(:lit, -1..9)),
+                 s(:lasgn, :i, s(:lit, 1..4)))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -366,25 +342,19 @@ class TestHeckleRanges < HeckleTestCase
     expected = [
       s(:defn, :uses_ranges,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, 5..10)),
-            s(:lasgn, :i, s(:lit, -1..9)),
-            s(:lasgn, :i, s(:lit, 1..4))))),
+          s(:lasgn, :i, s(:lit, 5..10)),
+          s(:lasgn, :i, s(:lit, -1..9)),
+          s(:lasgn, :i, s(:lit, 1..4))),
       s(:defn, :uses_ranges,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, 6..100)),
-            s(:lasgn, :i, s(:lit, 5..10)),
-            s(:lasgn, :i, s(:lit, 1..4))))),
+          s(:lasgn, :i, s(:lit, 6..100)),
+          s(:lasgn, :i, s(:lit, 5..10)),
+          s(:lasgn, :i, s(:lit, 1..4))),
       s(:defn, :uses_ranges,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, 6..100)),
-            s(:lasgn, :i, s(:lit, -1..9)),
-            s(:lasgn, :i, s(:lit, 5..10))))),
+          s(:lasgn, :i, s(:lit, 6..100)),
+          s(:lasgn, :i, s(:lit, -1..9)),
+          s(:lasgn, :i, s(:lit, 5..10))),
     ]
 
     assert_mutations expected, @heckler
@@ -401,12 +371,10 @@ class TestHeckleSameLiteral < HeckleTestCase
 
   def test_same_literal_original_tree
     expected = s(:defn, :uses_same_literal,
-      s(:args),
-      s(:scope,
-        s(:block,
-          s(:lasgn, :i, s(:lit, 1)),
-          s(:lasgn, :i, s(:lit, 1)),
-          s(:lasgn, :i, s(:lit, 1)))))
+                 s(:args),
+                 s(:lasgn, :i, s(:lit, 1)),
+                 s(:lasgn, :i, s(:lit, 1)),
+                 s(:lasgn, :i, s(:lit, 1)))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -415,25 +383,19 @@ class TestHeckleSameLiteral < HeckleTestCase
     expected = [
       s(:defn, :uses_same_literal,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, 6)),
-            s(:lasgn, :i, s(:lit, 1)),
-            s(:lasgn, :i, s(:lit, 1))))),
+          s(:lasgn, :i, s(:lit, 6)),
+          s(:lasgn, :i, s(:lit, 1)),
+          s(:lasgn, :i, s(:lit, 1))),
       s(:defn, :uses_same_literal,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, 1)),
-            s(:lasgn, :i, s(:lit, 6)),
-            s(:lasgn, :i, s(:lit, 1))))),
+          s(:lasgn, :i, s(:lit, 1)),
+          s(:lasgn, :i, s(:lit, 6)),
+          s(:lasgn, :i, s(:lit, 1))),
       s(:defn, :uses_same_literal,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :i, s(:lit, 1)),
-            s(:lasgn, :i, s(:lit, 1)),
-            s(:lasgn, :i, s(:lit, 6))))),
+          s(:lasgn, :i, s(:lit, 1)),
+          s(:lasgn, :i, s(:lit, 1)),
+          s(:lasgn, :i, s(:lit, 6))),
       ]
 
     assert_mutations expected, @heckler
@@ -449,12 +411,10 @@ class TestHeckleStrings < HeckleTestCase
 
   def test_strings_original_tree
     expected = s(:defn, :uses_strings,
-      s(:args),
-      s(:scope,
-        s(:block,
-          s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "Hello, Robert"))),
-          s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "Hello, Jeff"))),
-          s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "Hi, Frank"))))))
+                 s(:args),
+                 s(:call, s(:ivar, :@names), :<<, s(:str, "Hello, Robert")),
+                 s(:call, s(:ivar, :@names), :<<, s(:str, "Hello, Jeff")),
+                 s(:call, s(:ivar, :@names), :<<, s(:str, "Hi, Frank")))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -463,25 +423,19 @@ class TestHeckleStrings < HeckleTestCase
     expected = [
       s(:defn, :uses_strings,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "l33t h4x0r"))),
-            s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "Hello, Jeff"))),
-            s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "Hi, Frank")))))),
+          s(:call, s(:ivar, :@names), :<<, s(:str, "l33t h4x0r")),
+          s(:call, s(:ivar, :@names), :<<, s(:str, "Hello, Jeff")),
+          s(:call, s(:ivar, :@names), :<<, s(:str, "Hi, Frank"))),
       s(:defn, :uses_strings,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "Hello, Robert"))),
-            s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "l33t h4x0r"))),
-            s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "Hi, Frank")))))),
+          s(:call, s(:ivar, :@names), :<<, s(:str, "Hello, Robert")),
+          s(:call, s(:ivar, :@names), :<<, s(:str, "l33t h4x0r")),
+          s(:call, s(:ivar, :@names), :<<, s(:str, "Hi, Frank"))),
       s(:defn, :uses_strings,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "Hello, Robert"))),
-            s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "Hello, Jeff"))),
-            s(:call, s(:ivar, :@names), :<<, s(:arglist, s(:str, "l33t h4x0r")))))),
+          s(:call, s(:ivar, :@names), :<<, s(:str, "Hello, Robert")),
+          s(:call, s(:ivar, :@names), :<<, s(:str, "Hello, Jeff")),
+          s(:call, s(:ivar, :@names), :<<, s(:str, "l33t h4x0r")))
     ]
 
     assert_mutations expected, @heckler
@@ -498,12 +452,10 @@ class TestHeckleIf < HeckleTestCase
   def test_if_original_tree
     expected = s(:defn, :uses_if,
                  s(:args),
-                 s(:scope,
-                   s(:block,
-                     s(:if,
-                       s(:call, nil, :some_func, s(:arglist)),
-                       s(:if, s(:call, nil, :some_other_func, s(:arglist)), s(:return), nil),
-                       nil))))
+                 s(:if,
+                   s(:call, nil, :some_func),
+                   s(:if, s(:call, nil, :some_other_func), s(:return), nil),
+                   nil))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -513,21 +465,17 @@ class TestHeckleIf < HeckleTestCase
       s(:defn,
         :uses_if,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:if,
-              s(:call, nil, :some_func, s(:arglist)),
-              nil,
-              s(:if, s(:call, nil, :some_other_func, s(:arglist)), s(:return), nil))))),
+          s(:if,
+            s(:call, nil, :some_func),
+            nil,
+            s(:if, s(:call, nil, :some_other_func), s(:return), nil))),
       s(:defn,
         :uses_if,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:if,
-              s(:call, nil, :some_func, s(:arglist)),
-              s(:if, s(:call, nil, :some_other_func, s(:arglist)), nil, s(:return)),
-              nil))))
+          s(:if,
+            s(:call, nil, :some_func),
+            s(:if, s(:call, nil, :some_other_func), nil, s(:return)),
+            nil))
     ]
 
     assert_mutations expected, @heckler
@@ -544,10 +492,8 @@ class TestHeckleBoolean < HeckleTestCase
   def test_boolean_original_tree
     expected = s(:defn, :uses_boolean,
                  s(:args),
-                 s(:scope,
-                   s(:block,
-                     s(:lasgn, :a, s(:true)),
-                     s(:lasgn, :b, s(:false)))))
+                 s(:lasgn, :a, s(:true)),
+                 s(:lasgn, :b, s(:false)))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -556,16 +502,12 @@ class TestHeckleBoolean < HeckleTestCase
     expected = [
       s(:defn, :uses_boolean,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :a, s(:false)),
-            s(:lasgn, :b, s(:false))))),
+        s(:lasgn, :a, s(:false)),
+        s(:lasgn, :b, s(:false))),
       s(:defn, :uses_boolean,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :a, s(:true)),
-            s(:lasgn, :b, s(:true))))),
+        s(:lasgn, :a, s(:true)),
+        s(:lasgn, :b, s(:true))),
     ]
 
     assert_mutations expected, @heckler
@@ -582,10 +524,8 @@ class TestHeckleWhile < HeckleTestCase
   def test_while_original_tree
     expected =  s(:defn, :uses_while,
                   s(:args),
-                  s(:scope,
-                    s(:block,
-                      s(:while, s(:call, nil, :some_func, s(:arglist)),
-                        s(:call, nil, :some_other_func, s(:arglist)), true))))
+                  s(:while, s(:call, nil, :some_func),
+                    s(:call, nil, :some_other_func), true))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -594,10 +534,8 @@ class TestHeckleWhile < HeckleTestCase
     expected = [
       s(:defn, :uses_while,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:until, s(:call, nil, :some_func, s(:arglist)),
-              s(:call, nil, :some_other_func, s(:arglist)), true))))]
+        s(:until, s(:call, nil, :some_func),
+          s(:call, nil, :some_other_func), true))]
 
     assert_mutations expected, @heckler
   end
@@ -613,10 +551,8 @@ class TestHeckleUntil < HeckleTestCase
   def test_until_original_tree
     expected =  s(:defn, :uses_until,
                   s(:args),
-                  s(:scope,
-                    s(:block,
-                      s(:until, s(:call, nil, :some_func, s(:arglist)),
-                        s(:call, nil, :some_other_func, s(:arglist)), true))))
+                  s(:until, s(:call, nil, :some_func),
+                    s(:call, nil, :some_other_func), true))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -625,10 +561,8 @@ class TestHeckleUntil < HeckleTestCase
     expected = [
       s(:defn, :uses_until,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:while, s(:call, nil, :some_func, s(:arglist)),
-              s(:call, nil, :some_other_func, s(:arglist)), true))))]
+          s(:while, s(:call, nil, :some_func),
+            s(:call, nil, :some_other_func), true))]
 
     assert_mutations expected, @heckler
   end
@@ -643,12 +577,10 @@ class TestHeckleCall < HeckleTestCase
   def test_call_original_tree
     expected =  s(:defn, :uses_call,
                   s(:args),
-                  s(:scope,
-                    s(:block,
-                      s(:call,
-                        s(:call, nil, :some_func, s(:arglist)),
-                        :+,
-                        s(:arglist, s(:call, nil, :some_other_func, s(:arglist)))))))
+                  s(:call,
+                    s(:call, nil, :some_func),
+                    :+,
+                    s(:call, nil, :some_other_func)))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -657,25 +589,19 @@ class TestHeckleCall < HeckleTestCase
     expected = [
       s(:defn, :uses_call,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:call,
-              s(:call, nil, :some_func, s(:arglist)),
-              :+,
-              s(:arglist, s(:nil)))))),
+          s(:call,
+            s(:call, nil, :some_func),
+            :+,
+            s(:nil))),
       s(:defn, :uses_call,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:call,
-              s(:nil),
-              :+,
-              s(:arglist, s(:call, nil, :some_other_func, s(:arglist))))))),
+          s(:call,
+            s(:nil),
+            :+,
+            s(:call, nil, :some_other_func))),
       s(:defn, :uses_call,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:nil)))),
+          s(:nil)),
     ]
 
     assert_mutations expected, @heckler
@@ -692,25 +618,22 @@ class TestHeckleCallblock < HeckleTestCase
   def test_callblock_original_tree
     expected =  s(:defn, :uses_callblock,
                   s(:args),
-                  s(:scope,
-                    s(:block,
-                      s(:iter,
-                        s(:call, s(:call, nil, :x, s(:arglist)), :y, s(:arglist)),
-                        nil,
-                        s(:lit, 1)))))
+                  s(:iter,
+                    s(:call, s(:call, nil, :x), :y),
+                    s(:args),
+                    s(:lit, 1)))
 
     assert_equal expected, @heckler.current_tree
   end
+
   def test_callblock_mutations
     expected = [
       s(:defn, :uses_callblock,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:iter,
-              s(:call, s(:nil), :y, s(:arglist)),
-              nil,
-              s(:lit, 1)))))
+          s(:iter,
+            s(:call, s(:nil), :y),
+            s(:args),
+            s(:lit, 1)))
     ]
 
     assert_mutations expected, @heckler
@@ -727,9 +650,7 @@ class TestHeckleClassMethod < HeckleTestCase
   def test_class_method_original_tree
     expected =  s(:defs, s(:self), :is_a_klass_method?,
                   s(:args),
-                  s(:scope,
-                    s(:block,
-                      s(:true))))
+                  s(:true))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -738,9 +659,7 @@ class TestHeckleClassMethod < HeckleTestCase
     expected = [
       s(:defs, s(:self), :is_a_klass_method?,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:false))))
+        s(:false))
     ]
 
     assert_mutations expected, @heckler
@@ -757,10 +676,8 @@ class TestHeckleCvasgn < HeckleTestCase
   def test_cvasgn_original_tree
     expected =  s(:defn, :uses_cvasgn,
                   s(:args),
-                  s(:scope,
-                    s(:block,
-                      s(:cvasgn, :@@cvar, s(:lit, 5)),
-                      s(:cvasgn, :@@cvar, s(:nil)))))
+                  s(:cvasgn, :@@cvar, s(:lit, 5)),
+                  s(:cvasgn, :@@cvar, s(:nil)))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -769,16 +686,12 @@ class TestHeckleCvasgn < HeckleTestCase
     expected = [
       s(:defn, :uses_cvasgn,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:cvasgn, :@@cvar, s(:lit, 5)),
-            s(:cvasgn, :@@cvar, s(:lit, 42))))),
+          s(:cvasgn, :@@cvar, s(:lit, 5)),
+          s(:cvasgn, :@@cvar, s(:lit, 42))),
       s(:defn, :uses_cvasgn,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:cvasgn, :@@cvar, s(:nil)),
-            s(:cvasgn, :@@cvar, s(:nil))))),
+          s(:cvasgn, :@@cvar, s(:nil)),
+          s(:cvasgn, :@@cvar, s(:nil))),
     ]
 
     assert_mutations expected, @heckler
@@ -795,10 +708,8 @@ class TestHeckleIasgn < HeckleTestCase
   def test_iasgn_original_tree
     expected =  s(:defn, :uses_iasgn,
                   s(:args),
-                  s(:scope,
-                    s(:block,
-                      s(:iasgn, :@ivar, s(:lit, 5)),
-                      s(:iasgn, :@ivar, s(:nil)))))
+                  s(:iasgn, :@ivar, s(:lit, 5)),
+                  s(:iasgn, :@ivar, s(:nil)))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -807,16 +718,12 @@ class TestHeckleIasgn < HeckleTestCase
     expected = [
       s(:defn, :uses_iasgn,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:iasgn, :@ivar, s(:lit, 5)),
-            s(:iasgn, :@ivar, s(:lit, 42))))),
+          s(:iasgn, :@ivar, s(:lit, 5)),
+          s(:iasgn, :@ivar, s(:lit, 42))),
       s(:defn, :uses_iasgn,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:iasgn, :@ivar, s(:nil)),
-            s(:iasgn, :@ivar, s(:nil))))),
+          s(:iasgn, :@ivar, s(:nil)),
+          s(:iasgn, :@ivar, s(:nil))),
     ]
 
     assert_mutations expected, @heckler
@@ -827,12 +734,6 @@ end
 class TestHeckleGasgn < HeckleTestCase
   def setup
     @method_name = "uses_gasgn"
-      s(:defn, :uses_cvasgn,
-        s(:args),
-        s(:scope,
-          s(:block,
-            s(:cvasgn, :@@cvar, s(:lit, 5)),
-            s(:cvasgn, :@@cvar, s(:lit, 42)))))
     @nodes = s(:gasgn)
     super
   end
@@ -840,10 +741,8 @@ class TestHeckleGasgn < HeckleTestCase
   def test_gasgn_original_tree
     expected =  s(:defn, :uses_gasgn,
                   s(:args),
-                  s(:scope,
-                    s(:block,
-                      s(:gasgn, :$gvar, s(:lit, 5)),
-                      s(:gasgn, :$gvar, s(:nil)))))
+                  s(:gasgn, :$gvar, s(:lit, 5)),
+                  s(:gasgn, :$gvar, s(:nil)))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -852,16 +751,12 @@ class TestHeckleGasgn < HeckleTestCase
     expected = [
       s(:defn, :uses_gasgn,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:gasgn, :$gvar, s(:lit, 5)),
-            s(:gasgn, :$gvar, s(:lit, 42))))),
+          s(:gasgn, :$gvar, s(:lit, 5)),
+          s(:gasgn, :$gvar, s(:lit, 42))),
       s(:defn, :uses_gasgn,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:gasgn, :$gvar, s(:nil)),
-            s(:gasgn, :$gvar, s(:nil))))),
+          s(:gasgn, :$gvar, s(:nil)),
+          s(:gasgn, :$gvar, s(:nil))),
     ]
 
     assert_mutations expected, @heckler
@@ -877,12 +772,9 @@ class TestHeckleLasgn < HeckleTestCase
   end
 
   def test_lasgn_original_tree
-    expected =  s(:defn, :uses_lasgn,
-                  s(:args),
-                  s(:scope,
-                    s(:block,
-                      s(:lasgn, :lvar, s(:lit, 5)),
-                      s(:lasgn, :lvar, s(:nil)))))
+    expected =  s(:defn, :uses_lasgn, s(:args),
+                  s(:lasgn, :lvar, s(:lit, 5)),
+                  s(:lasgn, :lvar, s(:nil)))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -891,16 +783,12 @@ class TestHeckleLasgn < HeckleTestCase
     expected = [
       s(:defn, :uses_lasgn,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :lvar, s(:nil)),
-            s(:lasgn, :lvar, s(:nil))))),
+          s(:lasgn, :lvar, s(:nil)),
+          s(:lasgn, :lvar, s(:nil))),
       s(:defn, :uses_lasgn,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :lvar, s(:lit, 5)),
-            s(:lasgn, :lvar, s(:lit, 42))))),
+          s(:lasgn, :lvar, s(:lit, 5)),
+          s(:lasgn, :lvar, s(:lit, 42))),
     ]
 
     assert_mutations expected, @heckler
@@ -915,13 +803,10 @@ class TestHeckleMasgn < HeckleTestCase
   end
 
   def test_masgn_original_tree
-    expected =  s(:defn, :uses_masgn,
-                  s(:args),
-                  s(:scope,
-                    s(:block,
-                      s(:masgn,
-                        s(:array, s(:iasgn, :@a), s(:gasgn, :$b), s(:lasgn, :c)),
-                        s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7))))))
+    expected =  s(:defn, :uses_masgn, s(:args),
+                  s(:masgn,
+                    s(:array, s(:iasgn, :@a), s(:gasgn, :$b), s(:lasgn, :c)),
+                    s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7))))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -930,25 +815,19 @@ class TestHeckleMasgn < HeckleTestCase
     expected = [
       s(:defn, :uses_masgn,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:masgn,
-              s(:array, s(:iasgn, :_heckle_dummy), s(:gasgn, :$b), s(:lasgn, :c)),
-              s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7)))))),
+          s(:masgn,
+            s(:array, s(:iasgn, :_heckle_dummy), s(:gasgn, :$b), s(:lasgn, :c)),
+            s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7)))),
       s(:defn, :uses_masgn,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:masgn,
-              s(:array, s(:iasgn, :@a), s(:gasgn, :_heckle_dummy), s(:lasgn, :c)),
-              s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7)))))),
+          s(:masgn,
+            s(:array, s(:iasgn, :@a), s(:gasgn, :_heckle_dummy), s(:lasgn, :c)),
+            s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7)))),
       s(:defn, :uses_masgn,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:masgn,
-              s(:array,s(:iasgn, :@a), s(:gasgn, :$b), s(:lasgn, :_heckle_dummy)),
-              s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7)))))),
+          s(:masgn,
+            s(:array,s(:iasgn, :@a), s(:gasgn, :$b), s(:lasgn, :_heckle_dummy)),
+            s(:array, s(:lit, 5), s(:lit, 6), s(:lit, 7)))),
     ]
 
     assert_mutations expected, @heckler
@@ -964,14 +843,11 @@ class TestHeckleIter < HeckleTestCase
   end
 
   def test_iter_original_tree
-    expected =  s(:defn, :uses_iter,
-                  s(:args),
-                  s(:scope,
-                    s(:block,
-                      s(:lasgn, :x, s(:array, s(:lit, 1), s(:lit, 2), s(:lit, 3))),
-                      s(:iter,
-                        s(:call, s(:lvar, :x), :each, s(:arglist)),
-                        s(:lasgn, :y), s(:lvar, :y)))))
+    expected =  s(:defn, :uses_iter, s(:args),
+                  s(:lasgn, :x, s(:array, s(:lit, 1), s(:lit, 2), s(:lit, 3))),
+                  s(:iter,
+                    s(:call, s(:lvar, :x), :each),
+                    s(:args, :y), s(:lvar, :y)))
 
     assert_equal expected, @heckler.current_tree
   end
@@ -980,20 +856,16 @@ class TestHeckleIter < HeckleTestCase
     expected = [
       s(:defn, :uses_iter,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :x, s(:nil)),
-            s(:iter,
-              s(:call, s(:lvar, :x), :each, s(:arglist)),
-              s(:lasgn, :y), s(:lvar, :y))))),
+          s(:lasgn, :x, s(:nil)),
+          s(:iter,
+            s(:call, s(:lvar, :x), :each),
+            s(:lasgn, :y), s(:lvar, :y))),
       s(:defn, :uses_iter,
         s(:args),
-        s(:scope,
-          s(:block,
-            s(:lasgn, :x, s(:array, s(:lit, 1), s(:lit, 2), s(:lit, 3))),
-            s(:iter,
-              s(:call, s(:lvar, :x), :each, s(:arglist)),
-              s(:lasgn, :_heckle_dummy), s(:lvar, :y))))),
+          s(:lasgn, :x, s(:array, s(:lit, 1), s(:lit, 2), s(:lit, 3))),
+          s(:iter,
+            s(:call, s(:lvar, :x), :each),
+            s(:lasgn, :_heckle_dummy), s(:lvar, :y))),
     ]
 
 
@@ -1011,9 +883,7 @@ class TestHeckleFindsNestedClassAndModule < HeckleTestCase
   end
 
   def test_nested_class_and_module_original_tree
-    expected =  s(:defn, :foo, s(:args), s(:scope,
-                  s(:block,
-                    s(:lit, 1337))))
+    expected =  s(:defn, :foo, s(:args), s(:lit, 1337))
 
     assert_equal expected, @heckler.current_tree
   end
