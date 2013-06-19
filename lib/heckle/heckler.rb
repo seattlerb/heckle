@@ -285,18 +285,13 @@ module Heckle
       args = exp.map {|n| process(n) }
       exp.clear
 
-      #if exp.empty? then
-      #  mutate_node s(type, var)
-      #else
-      #  mutate_node s(type, var, process(exp.shift))
-      #end
-
       mutate_node s(type, var, *args)
     end
 
     def mutate_asgn(node)
       type = node.shift
       var = node.shift
+
       if node.empty? then
         s(type, :_heckle_dummy)
       else
@@ -455,6 +450,14 @@ module Heckle
     def mutate_until(node)
       s(:while, node[1], node[2], node[3])
     end
+
+    def process_args(exp)
+      return s(:args) if exp.empty?
+
+      process_asgn :args, exp
+    end
+
+    alias mutate_args mutate_asgn
 
     def mutate_node(node)
       raise UnsupportedNodeError unless respond_to? "mutate_#{node.first}"

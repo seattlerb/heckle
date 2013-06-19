@@ -2,6 +2,8 @@ require 'minitest/autorun'
 require 'fixtures/heckle_dummy'
 require 'heckle'
 
+require 'pp'
+
 class TestHeckler < Heckle::Heckler
   def rand(*args)
     5
@@ -26,7 +28,6 @@ class TestHeckler < Heckle::Heckler
 end
 
 class HeckleTestCase < MiniTest::Unit::TestCase
-  require 'pp'
   def mu_pp(o)
     o.pretty_inspect
   end
@@ -64,9 +65,9 @@ class HeckleTestCase < MiniTest::Unit::TestCase
     assert_equal expected.map {|s| s.to_s}.sort, mutations.map {|s| s.to_s}.sort,
       [
         "expected(#{expected.size}):",
-        (expected - mutations).map {|m| m.inspect},
+        (expected - mutations).map {|m| m.pretty_inspect},
         "mutations(#{mutations.size}):",
-        (mutations - expected).map {|m| m.inspect}
+        (mutations - expected).map {|m| m.pretty_inspect}
       ].join("\n")
   end
 end
@@ -97,6 +98,7 @@ class TestHeckleHeckler < HeckleTestCase
   def test_should_grab_mutatees_from_method
     # expected is from tree of uses_while
     expected = {
+      :args => [s(:args)],
       :call => [s(:call, s(:lvar, :i), :<, s(:lit, 10)),
                 s(:call, s(:lvar, :i), :+, s(:lit, 1)),
                 s(:call, nil, :some_func), # FIX: why added?
@@ -142,7 +144,7 @@ class TestHeckleHeckler < HeckleTestCase
   end
 
   def test_should_count_mutatees_left
-    assert_equal 17, @heckler.mutations_left # FIX WHY?!?
+    assert_equal 18, @heckler.mutations_left # FIX WHY?!?
   end
 
   def test_reset
@@ -838,7 +840,7 @@ end
 class TestHeckleIter < HeckleTestCase
   def setup
     @method_name = "uses_iter"
-    @nodes = [ :call, :lasgn ]
+    @nodes = [ :call, :lasgn, :args ]
     super
   end
 
@@ -859,15 +861,14 @@ class TestHeckleIter < HeckleTestCase
           s(:lasgn, :x, s(:nil)),
           s(:iter,
             s(:call, s(:lvar, :x), :each),
-            s(:lasgn, :y), s(:lvar, :y))),
+            s(:args, :y), s(:lvar, :y))),
       s(:defn, :uses_iter,
         s(:args),
           s(:lasgn, :x, s(:array, s(:lit, 1), s(:lit, 2), s(:lit, 3))),
           s(:iter,
             s(:call, s(:lvar, :x), :each),
-            s(:lasgn, :_heckle_dummy), s(:lvar, :y))),
+            s(:args, :_heckle_dummy), s(:lvar, :y))),
     ]
-
 
     assert_mutations expected, @heckler
   end
