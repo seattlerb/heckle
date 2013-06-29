@@ -546,32 +546,46 @@ module Heckle
       nesting ||= klass_name.split("::").map {|k| k.to_sym }
       current, *nesting = nesting
 
-      sexp.each_sexp do |node|
-        if nesting.empty?
-          return node if method_match?(method_name, node)
-        else
-          return node if scope_match?(current, node)
+      if class_match?(sexp, current)
+        sexp.each_sexp do |node|
+          if nesting.empty?
+            return sexp if method_name.nil?
+
+            m = find_method node
+
+            return m if m
+          else
+            s = find_scope node, nesting
+
+            return s if s
+          end
         end
       end
 
       nil
     end
 
-    def scope_match?(name, node)
-      [:class, :module].include?(node[0]) && node[1] == name
+    def class_match? sexp, name
+      sexp_type, sexp_name = sexp[0], sexp[1]
+
+      (sexp_type == :module || sexp_type == :class) && sexp_name == name
     end
 
-    def method_match?(name, node)
+    def find_method sexp
       class_method = method_name.to_s =~ /^self\./
       clean_name = method_name.to_s.sub(/^self\./, '').to_sym
 
-      if class_method
-        return true if node[0] == :defs && node[2] == clean_name
-      else
-        return true if node[0] == :defn && node[1] == clean_name
+      sexp = s(:block, sexp) unless sexp.first == :block
+
+      sexp.each_sexp do |node|
+        if class_method
+          return node if node[0] == :defs && node[2] == clean_name
+        else
+          return node if node[0] == :defn && node[1] == clean_name
+        end
       end
 
-      false
+      nil
     end
 
     def expand_dirs_to_files(dirs='.')
