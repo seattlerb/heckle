@@ -147,6 +147,10 @@ class Heckled
 
   def uses_nothing
   end
+
+  def uses_infinite_loop?
+    true
+  end
   
   def uses_iter
     x = [ 1, 2, 3 ]

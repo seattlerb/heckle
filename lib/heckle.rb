@@ -552,7 +552,8 @@ class Heckle < SexpProcessor
 
     sexp = s(:block, sexp) unless sexp.first == :block
 
-    sexp.each_sexp do |node|
+    sexp.each do |node|
+      next unless Sexp === node
       next unless [:class, :module].include? node.first
       next unless node[1] == current
 
@@ -580,7 +581,8 @@ class Heckle < SexpProcessor
 
     sexp = s(:block, sexp) unless sexp.first == :block
 
-    sexp.each_sexp do |node|
+    sexp.each do |node|
+      next unless Sexp === node
       if class_method
         return node if node[0] == :defs && node[2] == clean_name
       else

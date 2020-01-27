@@ -5,7 +5,7 @@
 
 require "test/unit"
 
-$:.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
+$:.unshift File.join(File.dirname(__FILE__), *%w[.. .. test fixtures])
 require "heckled"
 
 class TestHeckled < Test::Unit::TestCase
