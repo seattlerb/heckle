@@ -1,0 +1,8 @@
+---
+sudo: false
+language: ruby
+dist: trusty
+cache: bundler
+rvm:
+  - 1.8.7
+before_install: bin/setup

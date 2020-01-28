@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+set -vx
+
+rvm use 1.8.7 --install
+rvm rubygems 1.8.25 --force
+gem uninstall bundler -axI
+gem install -v 1.10.6 bundler --no-rdoc --no-ri
+bundle install
+
+# Do any other automated setup that you need to do here

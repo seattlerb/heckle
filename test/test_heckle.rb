@@ -1,4 +1,5 @@
 require 'fixtures/heckle_dummy'
+require 'minitest/unit'
 require 'heckle'
 
 class TestHeckler < Heckle
